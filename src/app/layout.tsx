@@ -1,14 +1,14 @@
 import './global.css';
 import { Metadata } from 'next';
 import { inter, pacifico, lxgwWenKai, calSans } from '@/utils/fonts';
-import ClientLayout from '@/components/ClientLayout';
+import ClientLayout from '@/components/layout/ClientLayout';
 
 export const metadata: Metadata = {
   title: {
-    default: '  .me',
-    template: '%s |   .me',
+    default: 'Next Starter',
+    template: '%s | Next Starter',
   },
-  description: 'Software engineer and web developer',
+  description: 'Next.js 15 Starter Template',
   robots: {
     index: true,
     follow: true,
@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={[lxgwWenKai.variable, pacifico.variable, calSans.variable].join(' ')}
       suppressHydrationWarning
     >
-      <body className="bg-black">
+      <body>
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>

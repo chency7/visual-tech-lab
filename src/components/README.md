@@ -22,6 +22,11 @@
 - 搜索栏 (SearchBar)
 - 用户信息卡 (UserProfile)
 
+### 🪄 Provider 组件 (`providers/`)
+
+- 主题 Provider (ThemeProvider)
+- 国际化 Provider (I18nProvider)
+
 ## 💡 使用指南
 
 1. 组件必须按功能分类存放

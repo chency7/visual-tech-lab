@@ -1,31 +1,22 @@
 'use client';
 
-import { useEnv } from '@/hooks/useEnv';
-import { RouteMiddleware } from '@/middleware/router';
-import Loading from '@/components/loading';
-import MusicPlayer from '@/components/MusicPlayer';
 import React, { useEffect } from 'react';
-import { AudioProvider } from '@/components/AudioProvider';
-import { ThemeProvider } from '@/components/theme-provider';
+import { ThemeProvider } from '@/components/providers/theme-provider';
 import { usePathname } from 'next/navigation';
+import { I18nProvider } from '@/components/providers/i18n-provider';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
-  const { isDevelopment } = useEnv();
-  const debugScreens = isDevelopment ? 'debug-screens' : '';
   const pathname = usePathname();
-  
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <MusicPlayer />
-      <AudioProvider>
-        <RouteMiddleware>
-          <React.Suspense fallback={<Loading />}>{children}</React.Suspense>
-        </RouteMiddleware>
-      </AudioProvider>
+      <React.Suspense fallback={<div className="p-4 text-sm text-zinc-500">Loading...</div>}>
+        <I18nProvider>{children}</I18nProvider>
+      </React.Suspense>
     </ThemeProvider>
   );
-} 
+}

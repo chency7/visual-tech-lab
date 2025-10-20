@@ -33,14 +33,34 @@
 
 ```bash
 src/
-├── app/          # 页面和路由
-├── components/   # 可复用组件
-├── hooks/        # 自定义 Hooks
-├── utils/        # 工具函数
-├── types/        # 类型定义
-├── styles/       # 全局样式
-└── lib/          # 第三方库配置
+├── app/
+│   ├── api/                     # 接口入口（App Router 的 Route Handlers）
+│   │   ├── health/route.ts      # 示例：健康检查 GET /api/health
+│   │   ├── echo/                # 示例：Echo 接口目录（可添加 route.ts）
+│   │   └── users/               # 示例：用户接口目录（可添加 route.ts）
+│   ├── layout.tsx               # 页面布局
+│   └── page.tsx                 # 首页
+├── services/                    # 业务逻辑层（Service 层）
+│   ├── auth/                    # 认证相关业务模块
+│   └── demo/                    # 示例业务模块
+├── lib/                         # 第三方库配置 / 数据访问层
+│   ├── db/
+│   │   ├── drizzle.ts           # Drizzle + better-sqlite3 初始化
+│   │   └── schema.ts            # 数据表结构定义
+│   └── i18n/                    # 国际化配置
+├── utils/                       # 工具函数（纯函数，格式化/校验等）
+├── hooks/                       # 自定义 Hooks
+├── components/                  # UI 组件
+├── styles/                      # 全局样式
+└── types/                       # 全局类型定义
 ```
+
+### 🧱 架构分层（推荐）
+- UI 层：`src/app/*` 页面与 `src/components/*` 组件
+- API 层：`src/app/api/*/route.ts` 请求入口，只做参数校验与调用服务
+- 服务层：`src/services/*` 业务规则与流程编排
+- 数据层：`src/lib/db/*` 连接配置与表结构（Drizzle + SQLite）
+- 通用层：`src/utils/*` 工具函数、`src/types/*` 类型定义
 
 ## 🚀 快速开始
 

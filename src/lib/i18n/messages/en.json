@@ -1,0 +1,10 @@
+{
+  "home": {
+    "title": "Next.js 15 Starter Template",
+    "description": "Clear separation of UI / Logic / API layers",
+    "getStarted": "Get Started",
+    "apiExamples": "API Examples",
+    "health": "Health Check",
+    "users": "Users API"
+  }
+}

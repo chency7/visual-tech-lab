@@ -1,225 +1,79 @@
 'use client';
 
+import React, { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import Image from 'next/image';
-import React, { useEffect, useState } from 'react';
-import Particles from '@/components/particles';
 import { Github } from 'lucide-react';
-import { motion, useAnimation } from 'framer-motion';
-import { usePathname } from 'next/navigation';
+import { ThemeSwitch } from '@/components/ui/theme-switch';
+import LanguageSwitch from '@/components/features/LanguageSwitch';
 
-const navigation = [
-  { name: '随记', href: '/notes' },
-  // { name: "博客", href: "/views/contact" },
-  // { name: "关于", href: "/views/ablut" },
-];
+export default function HomePage() {
+  const t = useTranslations('home');
+  const [health, setHealth] = useState<string>('');
 
-export default function ThemeDark() {
-  const controls = useAnimation();
-  const [scrollProgress, setScrollProgress] = React.useState(0);
-  const scrollThreshold = 100;
-
-  // 添加滚动相关状态
-  const [scrollStartTime, setScrollStartTime] = React.useState<number | null>(null);
-  const [totalScroll, setTotalScroll] = React.useState(0);
-
-  // 配置参数
-  const TIME_WINDOW = 500; // 时间窗口：500ms
-  const SCROLL_THRESHOLD = 300; // 滚动阈值：300px
-
-  const [isHovered, setIsHovered] = useState(false);
-
-  const pathname = usePathname();
-
-  // 波浪动画配置
-  const container = {
-    hidden: { opacity: 0 },
-    visible: (i = 1) => ({
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1, // 增加间隔时间，让字母出现的更慢
-        delayChildren: 0.15 * i, // 增加延迟
-      },
-    }),
+  const checkHealth = async () => {
+    const res = await fetch('/api/health');
+    const data = await res.json();
+    setHealth(JSON.stringify(data));
   };
-
-  const child = {
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        type: 'spring',
-        damping: 20, // 增加阻尼，减少弹跳
-        stiffness: 100, // 降低刚度，让动画更柔和
-        duration: 1, // 增加动画持续时间
-      },
-    },
-    hidden: {
-      opacity: 0,
-      y: 30, // 增加初始位移距离
-      transition: {
-        type: 'spring',
-        damping: 20,
-        stiffness: 100,
-        duration: 1,
-      },
-    },
-  };
-
-  useEffect(() => {
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-
-      const currentTime = Date.now();
-
-      // 如果是新的滚动开始
-      if (!scrollStartTime) {
-        setScrollStartTime(currentTime);
-        setTotalScroll(Math.abs(e.deltaY));
-      } else {
-        // 在时间窗口内累计滚动距离
-        if (currentTime - scrollStartTime < TIME_WINDOW) {
-          setTotalScroll((prev) => prev + Math.abs(e.deltaY));
-        } else {
-          // 超出时间窗口，重置计数
-          setScrollStartTime(currentTime);
-          setTotalScroll(Math.abs(e.deltaY));
-        }
-      }
-
-      // 检查是否达到快速滚动阈值
-      if (totalScroll > SCROLL_THRESHOLD) {
-        setScrollProgress(scrollThreshold); // 直接设置为100%
-      } else {
-        // 正常渐进式填充
-        setScrollProgress((prev) => {
-          const newProgress = Math.min(Math.max(prev + e.deltaY, 0), scrollThreshold);
-          return newProgress;
-        });
-      }
-    };
-
-    window.addEventListener('wheel', handleWheel, { passive: false });
-    return () => window.removeEventListener('wheel', handleWheel);
-  }, [scrollStartTime, totalScroll]);
-
-  const fillPercentage = Math.min((scrollProgress / scrollThreshold) * 100, 100);
-
-  useEffect(() => {
-    controls.start({
-      clipPath: `inset(0 ${100 - fillPercentage}% 0 0)`,
-      transition: {
-        duration: fillPercentage === 100 ? 0.5 : 0.3, // 增加动画持续时间
-        ease: fillPercentage === 100 ? [0.4, 0, 0.2, 1] : 'easeInOut', // 使用更平滑的缓动函数
-      },
-    });
-  }, [fillPercentage, controls]);
 
   return (
-    <div className={`relative inset-0 flex h-screen w-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-tl from-black via-zinc-600/10 to-black`}>
-      {/* Logo */}
-      <div className="absolute left-4 top-4 z-30">
-        <Link href="/">
-          <Image
-            src="/logo.svg"
-            alt="Logo"
-            width={40}
-            height={40}
-            className="transition-transform duration-300 hover:rotate-180 hover:scale-110"
-            priority
-          />
-        </Link>
-      </div>
-
-      <nav className="mb-20 animate-fade-in">
-        <ul className="flex items-center justify-center gap-4">
-          {navigation.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="text-l text-zinc-500 duration-500 hover:text-zinc-300"
-            >
-              {item.name}
-            </Link>
-          ))}
-        </ul>
-      </nav>
-
-      <div className="animate-glow hidden h-px w-screen animate-fade-left bg-gradient-to-r from-zinc-300/0 via-zinc-300/50 to-zinc-300/0 md:block" />
-
-      <div className="relative">
-        {/* 背景文字（灰色） */}
-        <motion.h1
-          className="z-10 flex h-[300px] w-fit cursor-pointer select-none items-center justify-center overflow-hidden whitespace-nowrap bg-gradient-to-r from-zinc-500 to-zinc-500 bg-clip-text px-16 font-pacifico text-4xl text-transparent sm:text-6xl md:text-9xl"
-          variants={container}
-          initial="hidden"
-          animate="visible"
-        >
-          {Array.from('Next...').map((letter, index) => (
-            <motion.span
-              key={index}
-              variants={child}
-              className="inline-block transition-colors duration-300 hover:text-pink-500"
-              style={{
-                display: 'inline-block',
-                transform: isHovered ? `translateY(${Math.sin(index * 0.3) * 8}px)` : 'none', // 减小波浪幅度和频率
-                transition: 'transform 0.5s ease', // 增加过渡时间
-              }}
-            >
-              {letter}
-            </motion.span>
-          ))}
-        </motion.h1>
-
-        {/* 渐变填充文字 */}
-        <motion.h1
-          animate={controls}
-          initial={{ clipPath: 'inset(0 100% 0 0)' }}
-          className="absolute inset-0 z-20 flex h-[300px] cursor-pointer select-none items-center justify-center overflow-hidden whitespace-nowrap bg-gradient-to-r from-white via-pink-500 to-white bg-clip-text px-16 font-pacifico text-4xl text-transparent transition-all duration-300 hover:scale-105 sm:text-6xl md:text-9xl"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          whileHover={{
-            backgroundPosition: ['0%', '100%'],
-            transition: {
-              duration: 1,
-              ease: 'linear',
-              repeat: Infinity,
-              repeatType: 'reverse',
-            },
-          }}
-        >
-          {Array.from('Next...').map((letter, index) => (
-            <motion.span
-              key={index}
-              className="inline-block"
-              style={{
-                display: 'inline-block',
-                transform: isHovered ? `translateY(${Math.sin(index * 0.3) * 8}px)` : 'none', // 减小波浪幅度和频率
-                transition: 'transform 0.5s ease', // 增加过渡时间
-              }}
-            >
-              {letter}
-            </motion.span>
-          ))}
-        </motion.h1>
-      </div>
-
-      <div className="animate-glow hidden h-px w-screen animate-fade-right bg-gradient-to-r from-zinc-300/0 via-zinc-300/50 to-zinc-300/0 md:block" />
-
-      <Particles className="absolute inset-0 -z-10 animate-fade-in" quantity={500} />
-
-      <div className="mt-16 animate-fade-in text-center">
-        <h2 className="text-sm text-zinc-500">
-          <Github className="mr-1 inline h-4 w-4" />
+    <div className="min-h-screen bg-white text-zinc-900 dark:bg-black dark:text-zinc-100">
+      <header className="flex items-center justify-between px-6 py-4">
+        <h1 className="text-xl font-semibold">{t('title')}</h1>
+        <div className="flex items-center gap-3">
+          <LanguageSwitch />
+          <ThemeSwitch />
           <Link
-            target="_blank"
-            href="https://github.com/  7"
-            className="duration-500 hover:text-zinc-300 hover:underline"
+            href="https://github.com/"
+            className="text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-100"
           >
-              .github
+            <Github size={18} />
           </Link>
-        </h2>
-      </div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-4xl px-6">
+        <p className="mb-6 text-sm text-zinc-600 dark:text-zinc-400">{t('description')}</p>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Link
+            href="/api/health"
+            className="rounded-lg border border-zinc-200 p-4 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
+          >
+            <div className="text-sm font-medium">{t('health')}</div>
+            <div className="text-xs text-zinc-500">GET /api/health</div>
+          </Link>
+          <Link
+            href="/api/echo"
+            className="rounded-lg border border-zinc-200 p-4 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
+          >
+            <div className="text-sm font-medium">{t('echo')}</div>
+            <div className="text-xs text-zinc-500">POST /api/echo</div>
+          </Link>
+          <Link
+            href="/api/users"
+            className="rounded-lg border border-zinc-200 p-4 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
+          >
+            <div className="text-sm font-medium">{t('users')}</div>
+            <div className="text-xs text-zinc-500">GET/POST /api/users</div>
+          </Link>
+        </div>
+
+        <div className="mt-8">
+          <button
+            onClick={checkHealth}
+            className="rounded bg-zinc-900 px-3 py-2 text-sm text-white dark:bg-zinc-100 dark:text-zinc-900"
+          >
+            {t('apiExamples')}
+          </button>
+          {health && (
+            <pre className="mt-3 max-h-40 overflow-auto rounded bg-zinc-100 p-3 text-xs dark:bg-zinc-900">
+              {health}
+            </pre>
+          )}
+        </div>
+      </main>
     </div>
   );
 }

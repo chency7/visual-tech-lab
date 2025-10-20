@@ -1,0 +1,11 @@
+{
+  "home": {
+    "title": "Next.js 15 启动模板",
+    "description": "清晰的渲染层 / 逻辑层 / API 层拆分",
+    "getStarted": "开始使用",
+    "apiExamples": "API 示例",
+    "health": "健康检查",
+    "echo": "Echo 接口",
+    "users": "用户接口"
+  }
+}

@@ -30,46 +30,6 @@ body {
   font-family: var(--font-wenkai), var(--font-Pacifico), sans-serif;
 }
 
-/* 自定义音频播放器样式 */
-.rhap_container {
-  padding: 0.5rem !important;
-}
-
-.rhap_main-controls-button {
-  color: rgb(161 161 170) !important;
-}
-
-.rhap_main-controls-button:hover {
-  color: rgb(244 244 245) !important;
-}
-
-.rhap_volume-button {
-  color: rgb(161 161 170) !important;
-}
-
-.rhap_volume-button:hover {
-  color: rgb(244 244 245) !important;
-}
-
-.rhap_volume-bar {
-  background: rgb(63 63 70) !important;
-}
-
-.rhap_volume-indicator {
-  background: rgb(244 244 245) !important;
-}
-
-.rhap_progress-filled {
-  background: rgb(244 244 245) !important;
-}
-
-.rhap_progress-bar {
-  background: rgb(63 63 70) !important;
-}
-
-.rhap_progress-indicator {
-  background: rgb(244 244 245) !important;
-}
 
 /* 自定义滚动条样式 */
 ::-webkit-scrollbar {
