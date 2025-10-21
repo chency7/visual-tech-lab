@@ -2,7 +2,8 @@ const defaultTheme = require("tailwindcss/defaultTheme");
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./src/**/*.{js,ts,jsx,tsx,mdx}",],
+  content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
+  darkMode: "class",
   theme: {
     extend: {
       typography: {
@@ -113,7 +114,7 @@ module.exports = {
           },
           "100%": {
             width: "100%",
-          }
+          },
         },
         "reverse-spin": {
           from: {

@@ -44,20 +44,6 @@ export default function HomePage() {
             <div className="text-sm font-medium">{t('health')}</div>
             <div className="text-xs text-zinc-500">GET /api/health</div>
           </Link>
-          <Link
-            href="/api/echo"
-            className="rounded-lg border border-zinc-200 p-4 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
-          >
-            <div className="text-sm font-medium">{t('echo')}</div>
-            <div className="text-xs text-zinc-500">POST /api/echo</div>
-          </Link>
-          <Link
-            href="/api/users"
-            className="rounded-lg border border-zinc-200 p-4 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
-          >
-            <div className="text-sm font-medium">{t('users')}</div>
-            <div className="text-xs text-zinc-500">GET/POST /api/users</div>
-          </Link>
         </div>
 
         <div className="mt-8">
