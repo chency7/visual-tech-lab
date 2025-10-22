@@ -1,17 +1,17 @@
-version: '3.8'
-
 services:
   app:
-    container_name: next-app
+    container_name: next-start
     build:
       context: .
+      dockerfile: Dockerfile
       target: runner
-    restart: always
     ports:
-      - '3000:3000'
+      - "3001:3000"
     environment:
       - NODE_ENV=production
       - NEXT_TELEMETRY_DISABLED=1
+      - PORT=3000
+    restart: unless-stopped
     networks:
       - app-network
 

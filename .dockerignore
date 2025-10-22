@@ -5,10 +5,8 @@ node_modules
 .vscode
 README.md
 .env*
-docker-compose*
-Dockerfile*
 .dockerignore
 .gitignore
 .eslintrc*
 .prettier*
-*.log 
+*.log

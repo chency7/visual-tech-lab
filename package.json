@@ -11,7 +11,13 @@
     "format": "prettier --write \"**/*.{ts,tsx,css,md,json}\"",
     "prepare": "husky install",
     "clean": "rimraf node_modules .next",
-    "clean:all": "rimraf node_modules .next .contentlayer dist build"
+    "clean:lib": "rimraf node_modules .next",
+    "clean:all": "rimraf node_modules .next .contentlayer dist build",
+    "docker:build": "docker compose --progress plain build",
+    "docker:rebuild": "docker compose --progress plain build --no-cache",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f app"
   },
   "dependencies": {
     "@next/mdx": "^15.1.7",
