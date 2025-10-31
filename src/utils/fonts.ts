@@ -20,7 +20,7 @@ export const pacifico = Pacifico({
 export const lxgwWenKai = localFont({
   src: [
     {
-      path: '../../public/fonts/LXGWWenKai-Regular.ttf',
+      path: '../../public/fonts/woff2/LXGWWenKai-Regular.woff2',
       weight: '400',
       style: 'normal',
     },
@@ -33,7 +33,7 @@ export const lxgwWenKai = localFont({
 export const calSans = localFont({
   src: [
     {
-      path: '../../public/fonts/CalSans-SemiBold.ttf',
+      path: '../../public/fonts/woff2/CalSans-SemiBold.woff2',
       weight: '400',
       style: 'normal',
     },

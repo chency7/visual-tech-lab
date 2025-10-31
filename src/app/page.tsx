@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { Github } from 'lucide-react';
+import { Github, Home, Map } from 'lucide-react';
 import { ThemeSwitch } from '@/components/ui/theme-switch';
 import LanguageSwitch from '@/components/features/LanguageSwitch';
 
@@ -43,6 +43,28 @@ export default function HomePage() {
           >
             <div className="text-sm font-medium">{t('health')}</div>
             <div className="text-xs text-zinc-500">GET /api/health</div>
+          </Link>
+
+          <Link
+            href="/home"
+            className="rounded-lg border border-zinc-200 p-4 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
+          >
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Home size={16} className="text-blue-500" />
+              Home 页面
+            </div>
+            <div className="text-xs text-zinc-500">访问 Home 页面</div>
+          </Link>
+
+          <Link
+            href="/map"
+            className="rounded-lg border border-zinc-200 p-4 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
+          >
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Map size={16} className="text-green-600" />
+              地图页面
+            </div>
+            <div className="text-xs text-zinc-500">MapLibre 地图展示</div>
           </Link>
         </div>
 
