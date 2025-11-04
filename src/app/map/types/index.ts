@@ -62,8 +62,10 @@ export interface MapConfig {
 
 // IDW 配置类型
 export interface IdwConfig {
-    cols: number;
-    rows: number;
+    cols?: number;
+    rows?: number;
+    /** 目标格点间距（公里）。若设置则优先按此计算 cols/rows */
+    gridSpacingKm?: number;
     power: number;
     hidePointsLayerId: string;
     minzoom: number;

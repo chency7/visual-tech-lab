@@ -3,13 +3,13 @@ import type { BoundsTuple, LngLatTuple } from '../types';
 
 // 湖南省边界近似范围（经纬度）
 export const HUNAN_BOUNDS: BoundsTuple = [
-  [108.79, 24.38],
-  [114.27, 30.08],
+  [108.29, 24.38],
+  [114.77, 30.45],
 ];
 
 // 应用整体允许的视野范围（中国境内更宽范围）
 export const APP_BOUNDS: BoundsTuple = [
-  [99.94, 20.89],
+  [99.50, 20.89],
   [125.03, 33.52],
 ];
 

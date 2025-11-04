@@ -73,15 +73,24 @@ export default function MapPage() {
    */
   const idwConfig: IdwConfig = useMemo(
     () => ({
-      cols: 150,
-      rows: 150,
-      power: 6,
+      gridSpacingKm: 1,
+      power: 8,
       hidePointsLayerId: 'hunan-random-points-labels',
       minzoom: 6,
       neighbors: 8,
       maxDistanceDeg: 0.25,
       breaks: [0, 0.1, 10, 25, 50, 100, 250, 400, 600],
-      colors: ['#FAFAFA', '#AAF0AA', '#50C878', '#3CB4F0', '#1464DC', '#F064C8', '#B43CA0', '#FFB428', '#FF3C28'],
+      colors: [
+        '#FAFAFA',
+        '#AAF0AA',
+        '#50C878',
+        '#3CB4F0',
+        '#1464DC',
+        '#F064C8',
+        '#B43CA0',
+        '#FFB428',
+        '#FF3C28',
+      ],
     }),
     []
   );

@@ -169,6 +169,7 @@ export function useMapBusinessLogic() {
         type: 'symbol',
         source: pointsSourceId,
         minzoom: 0,
+        maxzoom: 12,
         layout: {
           'text-field': ['to-string', ['get', 'pre']],
           'text-size': 11,

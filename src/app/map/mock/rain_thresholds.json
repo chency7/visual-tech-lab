@@ -1,0 +1,56 @@
+[
+  {
+    "range": "0 - 0.1",
+    "color_description": "近乎白色的极浅灰色",
+    "rgb": "RGB(250, 250, 250)",
+    "hex": "#FAFAFA"
+  },
+  {
+    "range": "0.1 - 9.9",
+    "color_description": "非常浅的草绿色",
+    "rgb": "RGB(170, 240, 170)",
+    "hex": "#AAF0AA"
+  },
+  {
+    "range": "10 - 24.9",
+    "color_description": "中等饱和度的草绿色",
+    "rgb": "RGB(80, 200, 120)",
+    "hex": "#50C878"
+  },
+  {
+    "range": "25 - 49.9",
+    "color_description": "淡蓝色",
+    "rgb": "RGB(60, 180, 240)",
+    "hex": "#3CB4F0"
+  },
+  {
+    "range": "50 - 99.9",
+    "color_description": "深蓝色",
+    "rgb": "RGB(20, 100, 220)",
+    "hex": "#1464DC"
+  },
+  {
+    "range": "100 - 249.9",
+    "color_description": "亮粉色",
+    "rgb": "RGB(240, 100, 200)",
+    "hex": "#F064C8"
+  },
+  {
+    "range": "250 - 399.9",
+    "color_description": "紫红色",
+    "rgb": "RGB(180, 60, 160)",
+    "hex": "#B43CA0"
+  },
+  {
+    "range": "400 - 599.9",
+    "color_description": "橙黄色",
+    "rgb": "RGB(255, 180, 40)",
+    "hex": "#FFB428"
+  },
+  {
+    "range": "> 600",
+    "color_description": "亮橙红色",
+    "rgb": "RGB(255, 60, 40)",
+    "hex": "#FF3C28"
+  }
+]

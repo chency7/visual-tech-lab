@@ -1,7 +1,55 @@
 import { featureCollection, polygon, point } from '@turf/helpers';
 import isobands from '@turf/isobands';
+import { contours } from 'd3';
 import type { Feature, FeatureCollection, Polygon, Point } from 'geojson';
 import type { BoundsTuple } from '../types';
+import rainThresholds from '../mock/rain_thresholds.json';
+
+type RainThreshold = {
+  range: string;
+  color_description: string;
+  rgb: string;
+  hex: string;
+};
+
+function parseThresholds(
+  thresholds: RainThreshold[],
+  lastUpperSentinel = 10000
+): { breaks: number[]; colors: string[] } {
+  const breaks: number[] = [];
+  const colors: string[] = [];
+
+  let lastUpper: number | null = null;
+  for (const th of thresholds) {
+    const text = th.range.trim();
+    const m = text.match(/^(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)$/);
+    const m2 = text.match(/^>\s*(\d+(?:\.\d+)?)$/);
+    if (m) {
+      const lower = parseFloat(m[1]);
+      const upper = parseFloat(m[2]);
+      breaks.push(lower);
+      lastUpper = upper;
+      colors.push(th.hex);
+    } else if (m2) {
+      const lower = parseFloat(m2[1]);
+      breaks.push(lower);
+      lastUpper = lastUpperSentinel;
+      colors.push(th.hex);
+    }
+  }
+
+  if (lastUpper != null) {
+    breaks.push(lastUpper);
+  }
+
+  const sortedBreaks = Array.from(new Set(breaks)).sort((a, b) => a - b);
+  const intervalCount = Math.max(1, sortedBreaks.length - 1);
+  const colorList = colors.slice(0, intervalCount);
+  if (sortedBreaks[0] === 0 && colorList.length > 0) {
+    colorList[0] = '#FFFFFF';
+  }
+  return { breaks: sortedBreaks, colors: colorList };
+}
 
 /**
  * 生成指定边界范围内的规则矩形网格（cols × rows）。
@@ -34,6 +82,29 @@ export function generateRectGrid(bbox: BoundsTuple, cols: number, rows: number):
   }
 
   return featureCollection(features);
+}
+
+/**
+ * 根据经纬度边界与目标间距（公里）近似计算网格分辨率（列/行）。
+ * - 使用近似换算：1°纬度≈111.32km；1°经度≈111.32km×cos(纬度)
+ * - 取边界中心纬度做经度换算，适用于省域尺度的近似计算
+ */
+function computeGridResolutionFromSpacing(
+  bbox: BoundsTuple,
+  spacingKm: number
+): { cols: number; rows: number } {
+  const [[minLng, minLat], [maxLng, maxLat]] = bbox;
+  const widthDeg = Math.max(0, maxLng - minLng);
+  const heightDeg = Math.max(0, maxLat - minLat);
+  const latMean = (minLat + maxLat) / 2;
+  const metersPerDegLat = 111_320; // 约 111.32km
+  const metersPerDegLon = Math.max(1, 111_320 * Math.cos((latMean * Math.PI) / 180));
+  const spacingMeters = Math.max(1, spacingKm * 1000);
+  const widthMeters = widthDeg * metersPerDegLon;
+  const heightMeters = heightDeg * metersPerDegLat;
+  const cols = Math.max(1, Math.ceil(widthMeters / spacingMeters));
+  const rows = Math.max(1, Math.ceil(heightMeters / spacingMeters));
+  return { cols, rows };
 }
 
 /**
@@ -122,13 +193,13 @@ export function idwInterpolateToGrid(
   stations: StationDatum[],
   power = 2,
   opts?: { neighbors?: number; maxDistanceDeg?: number }
-): FeatureCollection<Polygon> {
+): FeatureCollection<Point> {
   const [[minLng, minLat], [maxLng, maxLat]] = bbox;
   const dx = (maxLng - minLng) / Math.max(1, cols);
   const dy = (maxLat - minLat) / Math.max(1, rows);
   const eps = 1e-9;
 
-  const features: Feature<Polygon>[] = [];
+  const features: Feature<Point>[] = [];
 
   for (let i = 0; i < cols; i++) {
     const x0 = minLng + i * dx;
@@ -175,14 +246,7 @@ export function idwInterpolateToGrid(
 
       const value = exactValue != null ? exactValue : (weightSum > 0 ? valueSum / weightSum : 0);
 
-      const ring = [
-        [x0, y0],
-        [x1, y0],
-        [x1, y1],
-        [x0, y1],
-        [x0, y0],
-      ];
-      const feat = polygon([ring], { value, i, j, cols, rows });
+      const feat = point([cx, cy], { value, i, j, cols, rows });
       features.push(feat);
     }
   }
@@ -203,6 +267,8 @@ export function applyIdwToLabelLayer(
   opts?: {
     cols?: number;
     rows?: number;
+    /** 目标格点间距，单位：公里；若设置则优先根据间距计算 cols/rows */
+    gridSpacingKm?: number;
     power?: number;
     sourceId?: string;
     labelId?: string;
@@ -214,8 +280,9 @@ export function applyIdwToLabelLayer(
   }
 ) {
   const {
-    cols = 80,
-    rows = 80,
+    cols: colsOpt = 80,
+    rows: rowsOpt = 80,
+    gridSpacingKm,
     power = 2,
     sourceId = 'hunan-idw-grid-source',
     labelId = 'hunan-idw-grid-labels',
@@ -224,12 +291,18 @@ export function applyIdwToLabelLayer(
     hidePointsLayerId,
   } = opts || {};
 
+  // 若提供按公里间距，则优先使用其计算分辨率
+  const { cols, rows } = (gridSpacingKm && gridSpacingKm > 0)
+    ? computeGridResolutionFromSpacing(bbox, gridSpacingKm)
+    : { cols: colsOpt, rows: rowsOpt };
+
   const gridFC = idwInterpolateToGrid(bbox, cols, rows, stations, power, {
     neighbors: opts?.neighbors,
     maxDistanceDeg: opts?.maxDistanceDeg,
   });
 
-  console.log('gridFC', gridFC)
+  console.log('gridFC', gridFC);
+
 
   if (!map.getSource(sourceId)) {
     map.addSource(sourceId, { type: 'geojson', data: gridFC, tolerance: 0 });
@@ -237,6 +310,9 @@ export function applyIdwToLabelLayer(
     const src: any = map.getSource(sourceId);
     src.setData(gridFC);
   }
+
+  // 绘制等值面色斑（基于阈值 parse 数组）
+  applyIdwIsobandsFillLayer(map, gridFC, rainThresholds as unknown as RainThreshold[]);
 
   // 可选：隐藏已有填充网格
   if (map.getLayer(fillId)) {
@@ -275,59 +351,95 @@ export function applyIdwToLabelLayer(
  * 基于 IDW 生成格点后，使用 Turf.isobands 生成等值面色斑，并以填充图层显示。
  */
 export function applyIdwIsobandsFillLayer(
-  map: any,
-  bbox: BoundsTuple,
-  stations: StationDatum[],
-  opts?: {
-    cols?: number;
-    rows?: number;
-    power?: number;
-    sourceId?: string;
-    fillId?: string;
-    hidePointsLayerId?: string;
-    hideLabelLayerId?: string;
-    breaks?: number[];
-    colors?: string[];
-    neighbors?: number;
-    maxDistanceDeg?: number;
-  }
+  map: maplibregl.Map,
+  // 格点数据
+  gridFC: FeatureCollection<Point>,
+  parse: RainThreshold[],
+  opts?: { sourceId?: string; fillId?: string; fillOpacity?: number }
 ) {
-  const {
-    cols = 80,
-    rows = 80,
-    power = 2,
-    sourceId = 'hunan-idw-isobands-source',
-    fillId = 'hunan-idw-isobands-fill',
-    hidePointsLayerId,
-    hideLabelLayerId,
-    breaks = [0, 0.1, 10, 25, 50, 100, 250, 400, 600],
-    colors = ['#FAFAFA', '#AAF0AA', '#50C878', '#3CB4F0', '#1464DC', '#F064C8', '#B43CA0', '#FFB428', '#FF3C28'],
-    neighbors,
-    maxDistanceDeg,
-  } = opts || {};
 
-  const gridFC = idwInterpolateToGrid(bbox, cols, rows, stations, power, { neighbors, maxDistanceDeg });
+  console.log('gridFC', gridFC);
+  const { breaks, colors } = parseThresholds(parse);
 
-  // Turf.isobands 
-  const bands = isobands(gridFC as any, breaks, { zProperty: 'value' });
+  // 读取 cols/rows 与值矩阵
+  const anyProps = gridFC.features[0]?.properties as any;
+  const cols: number = anyProps?.cols ?? Math.max(...gridFC.features.map(f => (f.properties as any)?.i ?? 0)) + 1;
+  const rows: number = anyProps?.rows ?? Math.max(...gridFC.features.map(f => (f.properties as any)?.j ?? 0)) + 1;
+  const values = new Array<number>(cols * rows).fill(0);
+  for (const f of gridFC.features) {
+    const p: any = f.properties || {};
+    const i: number = p.i ?? 0;
+    const j: number = p.j ?? 0;
+    const v: number = p.value ?? 0;
+    const idx = j * cols + i;
+    if (idx >= 0 && idx < values.length) values[idx] = v;
+  }
 
-  // 若颜色数量不匹配，做防御性截断
-  const colorList = colors.slice(0, Math.max(0, breaks.length - 1));
+  // 使用 d3.contours 生成阈值等值面（索引坐标系）
+  const contourGen = contours().size([cols, rows]).thresholds(breaks);
+  const contourList = contourGen(values) as any[];
+
+  // 从点集推断经纬度范围，用于将索引坐标映射到经纬度
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const f of gridFC.features) {
+    const [lng, lat] = f.geometry.coordinates as [number, number];
+    if (lng < minX) minX = lng;
+    if (lat < minY) minY = lat;
+    if (lng > maxX) maxX = lng;
+    if (lat > maxY) maxY = lat;
+  }
+  if (!isFinite(minX) || !isFinite(minY) || !isFinite(maxX) || !isFinite(maxY)) {
+    // 防御性兜底
+    minX = 0; minY = 0; maxX = 1; maxY = 1;
+  }
+  const dx = cols > 1 ? (maxX - minX) / (cols - 1) : 0;
+  const dy = rows > 1 ? (maxY - minY) / (rows - 1) : 0;
+
+  const features: Feature[] = [];
+  for (const c of contourList) {
+    const multiPolyCoords: number[][][][] = [];
+    for (const poly of c.coordinates) {
+      const transformedPoly: number[][][] = [];
+      for (const ring of poly) {
+        const transformedRing: number[][] = ring.map(([x, y]: number[]) => [minX + x * dx, minY + y * dy]);
+        // 闭合
+        const first = transformedRing[0];
+        const last = transformedRing[transformedRing.length - 1];
+        if (first && last && (first[0] !== last[0] || first[1] !== last[1])) {
+          transformedRing.push([first[0], first[1]]);
+        }
+        transformedPoly.push(transformedRing);
+      }
+      multiPolyCoords.push(transformedPoly);
+    }
+    features.push({
+      type: 'Feature',
+      geometry: { type: 'MultiPolygon', coordinates: multiPolyCoords } as any,
+      properties: { upper: c.value },
+    });
+  }
+
+  console.log('features', features)
+
+  const bandsFC = featureCollection(features as any);
+
+  const sourceId = opts?.sourceId ?? 'hunan-idw-isobands-source';
+  const fillId = opts?.fillId ?? 'hunan-idw-isobands-fill';
+  const opacity = opts?.fillOpacity ?? 0.35;
 
   if (!map.getSource(sourceId)) {
-    map.addSource(sourceId, { type: 'geojson', data: bands, tolerance: 0 });
+    map.addSource(sourceId, { type: 'geojson', data: bandsFC, tolerance: 0 });
   } else {
     const src: any = map.getSource(sourceId);
-    src.setData(bands);
+    src.setData(bandsFC);
   }
 
-  // 构造按上界匹配的颜色表达式（isobands 结果含 lower/upper 属性）
   const colorExpr: any[] = ['case'];
-  for (let i = 0; i < colorList.length; i++) {
+  for (let i = 0; i < Math.min(colors.length, Math.max(0, breaks.length - 1)); i++) {
     const upper = breaks[i + 1];
-    colorExpr.push(['<=', ['get', 'upper'], upper], colorList[i]);
+    colorExpr.push(['<=', ['get', 'upper'], upper], colors[i]);
   }
-  colorExpr.push('#888888');
+  colorExpr.push('red');
 
   if (!map.getLayer(fillId)) {
     map.addLayer({
@@ -336,18 +448,11 @@ export function applyIdwIsobandsFillLayer(
       source: sourceId,
       paint: {
         'fill-color': colorExpr as any,
-        'fill-opacity': 0.35,
+        'fill-opacity': 1,
       },
     });
   } else {
     map.setLayoutProperty(fillId, 'visibility', 'visible');
-  }
-
-  if (hidePointsLayerId && map.getLayer(hidePointsLayerId)) {
-    map.setLayoutProperty(hidePointsLayerId, 'visibility', 'none');
-  }
-  if (hideLabelLayerId && map.getLayer(hideLabelLayerId)) {
-    map.setLayoutProperty(hideLabelLayerId, 'visibility', 'none');
   }
 }
 
