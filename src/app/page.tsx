@@ -66,6 +66,17 @@ export default function HomePage() {
             </div>
             <div className="text-xs text-zinc-500">MapLibre 地图展示</div>
           </Link>
+
+          <Link
+            href="/map/hubei"
+            className="rounded-lg border border-zinc-200 p-4 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
+          >
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Map size={16} className="text-blue-600" />
+              数据处理模块（湖北）
+            </div>
+            <div className="text-xs text-zinc-500">左侧湖北地图，右侧 JSON 可视化与导出</div>
+          </Link>
         </div>
 
         <div className="mt-8">

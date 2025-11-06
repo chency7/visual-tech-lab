@@ -158,3 +158,12 @@ pre[class*='language-'] button {
 pre[class*='language-']:hover button {
   opacity: 1;
 }
+
+/* Split gutter styles */
+.gutter.gutter-horizontal {
+  background: var(--split-gutter-bg, #e5e7eb);
+}
+.gutter.gutter-horizontal:hover {
+  cursor: col-resize;
+  background: var(--split-gutter-hover-bg, #d1d5db);
+}

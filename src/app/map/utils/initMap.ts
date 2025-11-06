@@ -3,6 +3,7 @@ import maplibregl, { type MapOptions } from 'maplibre-gl';
 import { foxGisVectorStyle, APP_BOUNDS, DEFAULT_CENTER, DEFAULT_ZOOM, MIN_ZOOM, MAX_ZOOM } from '../const';
 import { toLngLatBounds } from './bounds';
 import { MeasureControl, GeolocateControl, ResetControl, ZoomCenterControl } from './plugins';
+import { MapboxDrawControl } from './plugins/MapboxDrawControl';
 
 // 控件位置类型（便于统一传参）
 type ControlPosition = maplibregl.ControlPosition;
@@ -20,6 +21,7 @@ type ControlsConfig = {
   measure?: boolean;
   measurePosition?: ControlPosition;
   zoomCenter?: false | { position?: ControlPosition };
+  draw?: false | { position?: ControlPosition };
 };
 
 // 创建地图的总配置（地图选项覆盖 + 控件开关）
@@ -43,6 +45,7 @@ export function createMap(container: HTMLElement, config?: CreateMapConfig): map
     measure: true,
     measurePosition: 'top-right',
     zoomCenter: { position: 'top-left' },
+    draw: false,
     ...(config?.controls ?? {}),
   };
 
@@ -88,6 +91,13 @@ export function createMap(container: HTMLElement, config?: CreateMapConfig): map
   if (controls.zoomCenter !== false && controls.zoomCenter != null) {
     const zcPos = (controls.zoomCenter as { position?: ControlPosition }).position ?? 'top-left';
     map.addControl(new ZoomCenterControl(), zcPos);
+  }
+
+  // 绘图控件（Mapbox Draw）：仅开启点与删除，事件在页面层监听
+  if (controls.draw !== false && controls.draw != null) {
+    const pos = (controls.draw as { position?: ControlPosition }).position ?? 'top-right';
+    const drawCtrl = new MapboxDrawControl(map, { position: pos });
+    (map as any).__mapboxDrawControl = drawCtrl;
   }
 
   return map;
