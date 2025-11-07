@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import { createMap } from '../utils/initMap';
@@ -10,23 +10,36 @@ import { JsonPanel } from './components/JsonPanel';
 // import initialData from './mock.json';
 import type maplibregl from 'maplibre-gl';
 import type { FeatureCollection, Polygon, MultiPolygon, Feature, Point } from 'geojson';
-import bbox from '@turf/bbox';
-import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
+import { bbox, booleanPointInPolygon } from '@turf/turf';
 import type { JsonValue, JsonObject } from './types';
-// Mapbox Draw 控件在 createMap 内部通过配置开启
+import { usePointsGenerator } from './hooks/usePointsGenerator';
+import { usePointsGeneratorPool } from './hooks/usePointsGeneratorPool';
+
+// 示例点属性模板（可在 UI 中编辑）
+const defaultPointTemplate: JsonObject = {
+  type: 'POI',
+  name: '示例点',
+  category: '默认',
+  rating: 0,
+  tags: ['demo'],
+};
 
 export default function HubeiDataPage() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
-  // Draw 控件实例通过 map.__mapboxDrawControl 访问
   const [editorRaw, setEditorRaw] = useState<string>('{}');
   const [selectedPointId, setSelectedPointId] = useState<string | null>(null);
   const [lastLngLat, setLastLngLat] = useState<{ lng: number; lat: number } | null>(null);
   const [genCount, setGenCount] = useState<string>('10');
+  const [templateRaw, setTemplateRaw] = useState<string>(
+    JSON.stringify(defaultPointTemplate, null, 2)
+  );
   const [selectedSourceType, setSelectedSourceType] = useState<'draw' | 'generated' | null>(null);
   const generatedFCRef = useRef<FeatureCollection<Point> | null>(null);
   const generatedEventsBoundRef = useRef<boolean>(false);
   const hubeiFCRef = useRef<FeatureCollection<Polygon | MultiPolygon> | null>(null);
+  const { generate } = usePointsGenerator();
+  const { generateParallel } = usePointsGeneratorPool();
 
   const handleJsonRawChange = useCallback((next: string) => {
     setEditorRaw(next);
@@ -46,44 +59,58 @@ export default function HubeiDataPage() {
     }
   }, []);
 
-  const handleJsonApply = useCallback((parsed: JsonValue) => {
-    const map = mapInstanceRef.current;
-    if (!map || !selectedPointId) return;
+  const handleJsonApply = useCallback(
+    (parsed: JsonValue) => {
+      const map = mapInstanceRef.current;
+      if (!map || !selectedPointId) return;
 
-    // 仅当为对象时应用到属性
-    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) return;
-    const props = parsed as JsonObject;
+      // 仅当为对象时应用到属性
+      if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) return;
+      const props = parsed as JsonObject;
 
-    if (selectedSourceType === 'draw') {
-      const drawCtrl = (map as any).__mapboxDrawControl as
-        | { setFeatureProperties: (id: string, props: Record<string, JsonValue>) => void }
-        | undefined;
-      if (drawCtrl) drawCtrl.setFeatureProperties(selectedPointId, props as Record<string, JsonValue>);
-    } else if (selectedSourceType === 'generated') {
-      const sourceId = 'generated-points-source';
-      const src = map.getSource(sourceId) as maplibregl.GeoJSONSource | undefined;
-      const fc = generatedFCRef.current;
-      if (src && fc) {
-        const idx = fc.features.findIndex((f) => String(f.id) === selectedPointId);
-        if (idx >= 0) {
-          const cur = fc.features[idx];
-          fc.features[idx] = {
-            ...cur,
-            properties: { ...(cur.properties ?? {}), ...props },
-          };
-          src.setData(fc);
+      if (selectedSourceType === 'draw') {
+        const drawCtrl = (map as any).__mapboxDrawControl as
+          | { setFeatureProperties: (id: string, props: Record<string, JsonValue>) => void }
+          | undefined;
+        if (drawCtrl)
+          drawCtrl.setFeatureProperties(selectedPointId, props as Record<string, JsonValue>);
+      } else if (selectedSourceType === 'generated') {
+        const sourceId = 'generated-points-source';
+        const src = map.getSource(sourceId) as maplibregl.GeoJSONSource | undefined;
+        const fc = generatedFCRef.current;
+        if (src && fc) {
+          const idx = fc.features.findIndex((f) => String(f.id) === selectedPointId);
+          if (idx >= 0) {
+            const cur = fc.features[idx];
+            fc.features[idx] = {
+              ...cur,
+              properties: { ...(cur.properties ?? {}), ...props },
+            };
+            src.setData(fc);
+          }
         }
       }
+    },
+    [selectedPointId, selectedSourceType]
+  );
+
+  // 模板 JSON 合法性校验
+  const templateValid = useMemo<boolean>(() => {
+    try {
+      const obj = JSON.parse(templateRaw);
+      return obj !== null && typeof obj === 'object' && !Array.isArray(obj);
+    } catch {
+      return false;
     }
-  }, [selectedPointId, selectedSourceType]);
+  }, [templateRaw]);
 
   useEffect(() => {
     const el = mapRef.current;
     if (!el) return;
 
     const defMapOptions = {
-      center: [112.38562, 30.582387] as [number, number],
-      zoom: 6.5,
+      center: [112.38562, 31.735995] as [number, number],
+      zoom: 6.21,
       minZoom: 2,
       maxZoom: 24,
     };
@@ -127,6 +154,7 @@ export default function HubeiDataPage() {
       setLastLngLat({ lng, lat });
       setSelectedSourceType('draw');
     });
+
     map.on('draw.selectionchange', (e: any) => {
       const f = e?.features?.[0];
       if (f && f.geometry?.type === 'Point') {
@@ -146,6 +174,7 @@ export default function HubeiDataPage() {
       if (!map.getSource('hubei')) {
         map.addSource('hubei', { type: 'geojson', data: fc });
       }
+
       if (!map.getLayer('hubei-fill')) {
         map.addLayer({
           id: 'hubei-fill',
@@ -157,6 +186,7 @@ export default function HubeiDataPage() {
           },
         });
       }
+
       if (!map.getLayer('hubei-outline')) {
         map.addLayer({
           id: 'hubei-outline',
@@ -170,12 +200,14 @@ export default function HubeiDataPage() {
       }
 
       const popup = new (require('maplibre-gl').Popup)({ closeButton: false, closeOnClick: false });
+
       map.on('mousemove', 'hubei-fill', (e: any) => {
         const f = e.features?.[0];
         const name = f?.properties?.name || '湖北省';
         if (!e.lngLat) return;
         popup.setLngLat(e.lngLat).setHTML(`<div class="text-xs">${name}</div>`).addTo(map);
       });
+
       map.on('mouseleave', 'hubei-fill', () => {
         popup.remove();
       });
@@ -199,51 +231,29 @@ export default function HubeiDataPage() {
     };
   }, []);
 
-  const addRandomPoints = (count: number) => {
+  const addRandomPoints = async (count: number) => {
     const map = mapInstanceRef.current;
     if (!map || count <= 0) return;
     const hb = hubeiFCRef.current;
     if (!hb || !hb.features?.length) return;
 
-    const b = bbox(hb); // [minLng, minLat, maxLng, maxLat]
-    const minLng = b[0];
-    const minLat = b[1];
-    const maxLng = b[2];
-    const maxLat = b[3];
-
-    const features: Feature<Point>[] = [];
-    let attempts = 0;
-    const maxAttempts = Math.max(1000, count * 50);
-
-    while (features.length < count && attempts < maxAttempts) {
-      attempts++;
-      const lng = minLng + Math.random() * (maxLng - minLng);
-      const lat = minLat + Math.random() * (maxLat - minLat);
-      const candidate: Feature<Point> = {
-        type: 'Feature',
-        geometry: { type: 'Point', coordinates: [lng, lat] },
-        properties: {},
-      };
-
-      let inside = false;
-      for (const f of hb.features) {
-        if (booleanPointInPolygon(candidate, f as any)) {
-          inside = true;
-          break;
-        }
+    // 解析示例属性模板（仅当合法时应用）
+    let templateProps: JsonObject | null = null;
+    try {
+      const parsed = JSON.parse(templateRaw);
+      if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        templateProps = parsed as JsonObject;
       }
-      if (inside) {
-        const idx = features.length + 1;
-        features.push({
-          type: 'Feature',
-          id: `gen-${idx}`,
-          geometry: candidate.geometry,
-          properties: { source: 'generated', idx },
-        });
-      }
+    } catch {
+      templateProps = null;
     }
 
-    const fc: FeatureCollection<Point> = { type: 'FeatureCollection', features };
+    const threads = (navigator as any).hardwareConcurrency || 4;
+    const parallelThreshold = Math.max(threads * 1000, 4000);
+    const fc: FeatureCollection<Point> =
+      count >= parallelThreshold
+        ? await generateParallel(count, hb, templateProps)
+        : await generate(count, hb, templateProps);
     generatedFCRef.current = fc;
     // 将生成的通用 GeoJSON 关联到右侧 JSON 原始数据
     setEditorRaw(JSON.stringify(fc, null, 2));
@@ -288,25 +298,46 @@ export default function HubeiDataPage() {
   return (
     <div className="h-screen w-full">
       <SplitPane
-        initialLeftRatio={0.4}
-        minLeftPx={280}
+        initialLeftRatio={0.5}
+        minLeftPx={360}
         minRightPx={360}
         left={
           <div className="relative h-full w-full">
             <div ref={mapRef} className="absolute inset-0 h-full w-full" />
-            <div className="absolute right-[60px] top-3 z-50 flex items-center gap-2 rounded bg-white/90 p-2 text-xs shadow backdrop-blur dark:bg-zinc-900/80">
-              <input
-                value={genCount}
-                onChange={(e) => setGenCount(e.target.value.replace(/[^0-9]/g, ''))}
-                placeholder="生成点数量"
-                className="h-7 w-24 rounded border border-zinc-300 px-2 outline-none dark:border-zinc-700 dark:bg-zinc-900"
-              />
-              <button
-                onClick={() => addRandomPoints(Math.max(0, Number(genCount) || 0))}
-                className="h-7 rounded bg-blue-600 px-2 text-white dark:bg-blue-500"
-              >
-                生成点
-              </button>
+            <div className="absolute left-[230px] top-3 z-50 flex flex-col items-start gap-2 rounded bg-white/90 p-2 text-xs shadow backdrop-blur dark:bg-zinc-900/80">
+              <div className="flex items-center gap-2">
+                <input
+                  value={genCount}
+                  onChange={(e) => setGenCount(e.target.value.replace(/[^0-9]/g, ''))}
+                  placeholder="生成点数量"
+                  className="h-7 w-24 rounded border border-zinc-300 px-2 outline-none dark:border-zinc-700 dark:bg-zinc-900"
+                />
+                <button
+                  onClick={() => addRandomPoints(Math.max(0, Number(genCount) || 0))}
+                  className="h-7 rounded bg-blue-600 px-2 text-white dark:bg-blue-500"
+                >
+                  生成点
+                </button>
+              </div>
+              <div className="mt-1 w-[280px]">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-[11px] text-zinc-600 dark:text-zinc-400">
+                    示例属性（JSON，应用到每个生成点）
+                  </span>
+                  <span
+                    className={`rounded px-1.5 py-0.5 text-[11px] ${templateValid ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200'}`}
+                  >
+                    {templateValid ? '有效' : '无效'}
+                  </span>
+                </div>
+                <textarea
+                  value={templateRaw}
+                  onChange={(e) => setTemplateRaw(e.target.value)}
+                  spellCheck={false}
+                  placeholder='{"type":"POI","name":"示例点"}'
+                  className="h-24 w-full resize-none rounded border border-zinc-300 bg-transparent p-2 font-mono text-[11px] outline-none dark:border-zinc-700 dark:bg-zinc-900"
+                />
+              </div>
             </div>
             <Card className="pointer-events-none absolute left-2 top-12 z-50 bg-white/80 p-2 text-xs shadow backdrop-blur dark:bg-zinc-900/80">
               湖北省地图

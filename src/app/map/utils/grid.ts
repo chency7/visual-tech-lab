@@ -1,5 +1,4 @@
-import { featureCollection, polygon, point } from '@turf/helpers';
-import isobands from '@turf/isobands';
+import { featureCollection, polygon, point, isobands } from '@turf/turf';
 import { contours } from 'd3';
 import type { Feature, FeatureCollection, Polygon, Point } from 'geojson';
 import type { BoundsTuple } from '../types';

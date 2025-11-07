@@ -1,5 +1,5 @@
 import type maplibregl from 'maplibre-gl';
-import { point, lineString, featureCollection } from '@turf/helpers';
+import { point, lineString, featureCollection } from '@turf/turf';
 import type { FeatureCollection as GeoFeatureCollection, Point as GeoPoint, LineString as GeoLineString } from 'geojson';
 
 type LngLat = [number, number];

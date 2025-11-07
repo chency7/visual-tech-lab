@@ -16,7 +16,7 @@ export function SplitPane({
   left,
   right,
   initialLeftRatio = 0.4,
-  minLeftPx = 240,
+  minLeftPx = 320,
   minRightPx = 320,
   className = '',
 }: SplitPaneProps) {
