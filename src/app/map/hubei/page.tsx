@@ -14,6 +14,9 @@ import { bbox, booleanPointInPolygon } from '@turf/turf';
 import type { JsonValue, JsonObject } from './types';
 import { usePointsGenerator } from './hooks/usePointsGenerator';
 import { usePointsGeneratorPool } from './hooks/usePointsGeneratorPool';
+import { extractOuterBoundary } from './utils/outerBoundary';
+import { downloadJson } from './utils/export';
+import { splitCityAndDistrict } from './utils/splitDistrict';
 
 // 示例点属性模板（可在 UI 中编辑）
 const defaultPointTemplate: JsonObject = {
@@ -38,6 +41,7 @@ export default function HubeiDataPage() {
   const generatedFCRef = useRef<FeatureCollection<Point> | null>(null);
   const generatedEventsBoundRef = useRef<boolean>(false);
   const hubeiFCRef = useRef<FeatureCollection<Polygon | MultiPolygon> | null>(null);
+  const hubeiDistrictFCRef = useRef<FeatureCollection<Polygon | MultiPolygon> | null>(null);
   const { generate } = usePointsGenerator();
   const { generateParallel } = usePointsGeneratorPool();
 
@@ -295,6 +299,51 @@ export default function HubeiDataPage() {
     }
   };
 
+  // 导出湖北省最外层边界（写死 420000_full）
+  const exportOuterBoundary = useCallback(async () => {
+    // 优先使用已加载到地图的湖北数据
+    let hb = hubeiFCRef.current;
+    if (!hb) {
+      try {
+        const res = await fetch('https://geo.datav.aliyun.com/areas_v3/bound/420000_full.json');
+        hb = (await res.json()) as FeatureCollection<Polygon | MultiPolygon>;
+      } catch {
+        return;
+      }
+    }
+    const out = extractOuterBoundary(hb);
+    downloadJson('hubei-outer-boundary.geojson', out as unknown as JsonValue);
+  }, []);
+
+  // 懒加载区县数据并拆分导出（市级与区县）
+  const ensureDistrictFC = useCallback(async () => {
+    if (hubeiDistrictFCRef.current) return hubeiDistrictFCRef.current;
+    try {
+      const res = await fetch(
+        'https://geo.datav.aliyun.com/areas_v3/bound/420000_full_district.json'
+      );
+      const fc = (await res.json()) as FeatureCollection<Polygon | MultiPolygon>;
+      hubeiDistrictFCRef.current = fc;
+      return fc;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const exportCityLevel = useCallback(async () => {
+    const fc = await ensureDistrictFC();
+    if (!fc) return;
+    const { cityFC } = splitCityAndDistrict(fc);
+    downloadJson('hubei-city-boundaries.geojson', cityFC as unknown as JsonValue);
+  }, [ensureDistrictFC]);
+
+  const exportDistrictLevel = useCallback(async () => {
+    const fc = await ensureDistrictFC();
+    if (!fc) return;
+    const { districtFC } = splitCityAndDistrict(fc);
+    downloadJson('hubei-district-boundaries.geojson', districtFC as unknown as JsonValue);
+  }, [ensureDistrictFC]);
+
   return (
     <div className="h-screen w-full">
       <SplitPane
@@ -317,6 +366,24 @@ export default function HubeiDataPage() {
                   className="h-7 rounded bg-blue-600 px-2 text-white dark:bg-blue-500"
                 >
                   生成点
+                </button>
+                <button
+                  onClick={exportOuterBoundary}
+                  className="h-7 rounded bg-zinc-900 px-2 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                >
+                  导出外边界
+                </button>
+                <button
+                  onClick={exportCityLevel}
+                  className="h-7 rounded bg-emerald-600 px-2 text-white dark:bg-emerald-500"
+                >
+                  导出市级
+                </button>
+                <button
+                  onClick={exportDistrictLevel}
+                  className="h-7 rounded bg-purple-600 px-2 text-white dark:bg-purple-500"
+                >
+                  导出区县
                 </button>
               </div>
               <div className="mt-1 w-[280px]">
