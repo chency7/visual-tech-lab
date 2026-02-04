@@ -9,7 +9,7 @@ import { SplitPane } from '@/components/ui/split-pane';
 import { JsonPanel } from './components/JsonPanel';
 // import initialData from './mock.json';
 import type maplibregl from 'maplibre-gl';
-import type { FeatureCollection, Polygon, MultiPolygon, Feature, Point } from 'geojson';
+import type { FeatureCollection, Polygon, MultiPolygon, Feature, Point, LineString } from 'geojson';
 import { bbox, bboxPolygon, booleanPointInPolygon, centroid } from '@turf/turf';
 import type { JsonValue, JsonObject } from './types';
 import { usePointsGenerator } from './hooks/usePointsGenerator';
@@ -246,7 +246,7 @@ export default function HubeiDataPage() {
       else map.on('load', () => addHubeiLayers(fc));
     };
 
-    fetch('https://geo.datav.aliyun.com/areas_v3/bound/420000_full.json')
+    fetch('/json/420000_full.json', {})
       .then((res) => res.json())
       .then((fc: FeatureCollection<Polygon | MultiPolygon>) => {
         ensureLoadedAndAdd(fc);
@@ -288,7 +288,7 @@ export default function HubeiDataPage() {
     const enrichedFC = enrichFeatureCollection(fc, districtFC, typesOpts, templateProps);
     generatedFCRef.current = enrichedFC;
     // 将生成的通用 GeoJSON 关联到右侧 JSON 原始数据
-    setEditorRaw(JSON.stringify(enrichedFC, null, 2));
+    // setEditorRaw(JSON.stringify(enrichedFC, null, 2));
 
     const sourceId = 'generated-points-source';
     const layerId = 'generated-points-layer';
@@ -331,7 +331,12 @@ export default function HubeiDataPage() {
   const exportOuterBoundary = useCallback(async () => {
     // 优先使用已加载到地图的湖北数据
     try {
-      const res = await fetch('https://geo.datav.aliyun.com/areas_v3/bound/420000.json');
+      const res = await fetch('/json/420000.json', {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          Accept: 'application/json',
+        },
+      });
       const out = await res.json();
       downloadJson('hubei-outer-boundary.geojson', out as unknown as JsonValue);
     } catch {
@@ -343,9 +348,7 @@ export default function HubeiDataPage() {
   const ensureDistrictFC = useCallback(async () => {
     if (hubeiDistrictFCRef.current) return hubeiDistrictFCRef.current;
     try {
-      const res = await fetch(
-        'https://geo.datav.aliyun.com/areas_v3/bound/420000_full_district.json'
-      );
+      const res = await fetch('/json/420000_full_district.json');
       const fc = (await res.json()) as FeatureCollection<Polygon | MultiPolygon>;
       hubeiDistrictFCRef.current = fc;
       return fc;
@@ -452,7 +455,7 @@ export default function HubeiDataPage() {
     const map = mapInstanceRef.current;
     if (!map) return;
     try {
-      const res = await fetch('https://geo.datav.aliyun.com/areas_v3/bound/420000.json');
+      const res = await fetch('http://geo.datav.aliyun.com/areas_v3/bound/420000.json');
       const fc = (await res.json()) as FeatureCollection<Polygon | MultiPolygon>;
       const bounds = bbox(fc);
       console.log('湖北省 bbox:', bounds);
@@ -461,6 +464,123 @@ export default function HubeiDataPage() {
       const sourceId = 'hubei-bbox';
       const fillId = 'hubei-bbox-fill';
       const outlineId = 'hubei-bbox-outline';
+      const ticksSourceId = 'hubei-bbox-ticks';
+      const ticksLayerId = 'hubei-bbox-ticks-layer';
+      const labelsLayerId = 'hubei-bbox-labels-layer';
+
+      // 生成刻度
+      const [minLng, minLat, maxLng, maxLat] = bounds;
+      const features: Feature<LineString | Point>[] = [];
+
+      const lngStep = 0.5;
+      const latStep = 0.5;
+      const tickLen = 0.05; // 刻度线长度
+      const labelOffset = 0.15; // 标签偏移量
+      const minGap = 0.1; // 最小间距，防止重叠
+
+      // 辅助函数：生成不重叠的刻度值列表
+      const generateTicks = (min: number, max: number, step: number) => {
+        const ticks: number[] = [min];
+        const start = Math.ceil(min / step) * step;
+        for (let val = start; val <= max; val += step) {
+          const v = parseFloat(val.toFixed(2));
+          // 如果与最小值太近，跳过
+          if (Math.abs(v - min) < minGap) continue;
+          // 如果与最大值太近，先暂存（循环结束会处理最大值，这里其实只需要保证不加重复的）
+          if (Math.abs(v - max) < minGap) continue;
+          ticks.push(v);
+        }
+        if (Math.abs(max - ticks[ticks.length - 1]) >= minGap) {
+          ticks.push(max);
+        }
+        return ticks;
+      };
+
+      const lngTicks = generateTicks(minLng, maxLng, lngStep);
+      const latTicks = generateTicks(minLat, maxLat, latStep);
+
+      // 经度刻度 (上下)
+      lngTicks.forEach((lngVal) => {
+        // Bottom
+        features.push({
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [lngVal, minLat],
+              [lngVal, minLat - tickLen],
+            ],
+          },
+          properties: {},
+        });
+        features.push({
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [lngVal, minLat - labelOffset] },
+          properties: { text: lngVal.toFixed(2) + '°' },
+        });
+
+        // Top
+        features.push({
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [lngVal, maxLat],
+              [lngVal, maxLat + tickLen],
+            ],
+          },
+          properties: {},
+        });
+        features.push({
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [lngVal, maxLat + labelOffset] },
+          properties: { text: lngVal.toFixed(2) + '°' },
+        });
+      });
+
+      // 纬度刻度 (左右)
+      latTicks.forEach((latVal) => {
+        // Left
+        features.push({
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [minLng, latVal],
+              [minLng - tickLen, latVal],
+            ],
+          },
+          properties: {},
+        });
+        features.push({
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [minLng - labelOffset * 1.5, latVal] },
+          properties: { text: latVal.toFixed(2) + '°' },
+        });
+
+        // Right
+        features.push({
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [maxLng, latVal],
+              [maxLng + tickLen, latVal],
+            ],
+          },
+          properties: {},
+        });
+        features.push({
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [maxLng + labelOffset * 1.5, latVal] },
+          properties: { text: latVal.toFixed(2) + '°' },
+        });
+      });
+
+      const ticksFC: FeatureCollection<LineString | Point> = {
+        type: 'FeatureCollection',
+        features: features,
+      };
 
       const addLayers = () => {
         if (!map.getSource(sourceId)) {
@@ -470,6 +590,13 @@ export default function HubeiDataPage() {
           src.setData(rect);
         }
 
+        if (!map.getSource(ticksSourceId)) {
+          map.addSource(ticksSourceId, { type: 'geojson', data: ticksFC });
+        } else {
+          const src = map.getSource(ticksSourceId) as maplibregl.GeoJSONSource;
+          src.setData(ticksFC);
+        }
+
         if (!map.getLayer(fillId)) {
           map.addLayer({
             id: fillId,
@@ -477,7 +604,7 @@ export default function HubeiDataPage() {
             source: sourceId,
             paint: {
               'fill-color': '#f59e0b',
-              'fill-opacity': 0.15,
+              'fill-opacity': 0.05,
             },
           });
         }
@@ -489,7 +616,45 @@ export default function HubeiDataPage() {
             source: sourceId,
             paint: {
               'line-color': '#b45309',
-              'line-width': 2,
+              'line-width': 1,
+              'line-dasharray': [4, 2],
+            },
+          });
+        }
+
+        // Ticks图层
+        if (!map.getLayer(ticksLayerId)) {
+          map.addLayer({
+            id: ticksLayerId,
+            type: 'line',
+            source: ticksSourceId,
+            filter: ['==', '$type', 'LineString'],
+            paint: {
+              'line-color': '#b45309',
+              'line-width': 1,
+            },
+          });
+        }
+
+        // Labels图层
+        if (!map.getLayer(labelsLayerId)) {
+          map.addLayer({
+            id: labelsLayerId,
+            type: 'symbol',
+            source: ticksSourceId,
+            filter: ['==', '$type', 'Point'],
+            layout: {
+              'text-field': ['get', 'text'],
+              'text-size': 11,
+              'text-justify': 'center',
+              'text-anchor': 'center',
+              'text-allow-overlap': true,
+              'text-ignore-placement': true,
+            },
+            paint: {
+              'text-color': '#78350f',
+              'text-halo-color': '#ffffff',
+              'text-halo-width': 2,
             },
           });
         }
