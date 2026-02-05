@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import Link from 'next/link';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
-import { createMap } from '../utils/initMap';
+import { createMap } from '../shared/utils/initMap';
 import { Card } from '@/components/ui/card';
 import { SplitPane } from '@/components/ui/split-pane';
 import { JsonPanel } from './components/JsonPanel';
@@ -689,6 +690,12 @@ export default function HubeiDataPage() {
         minRightPx={360}
         left={
           <div className="relative h-full w-full">
+            <Link
+              href="/"
+              className="absolute right-4 top-4 z-50 rounded bg-white/90 px-3 py-2 text-sm font-medium shadow backdrop-blur hover:bg-white dark:bg-zinc-900/90 dark:hover:bg-zinc-900"
+            >
+              返回首页
+            </Link>
             <div ref={mapRef} className="absolute inset-0 h-full w-full" />
             <div className="absolute left-[230px] top-3 z-50 flex flex-col items-start gap-2 rounded bg-white/90 p-2 text-xs shadow backdrop-blur dark:bg-zinc-900/80">
               <div className="flex items-center gap-2">

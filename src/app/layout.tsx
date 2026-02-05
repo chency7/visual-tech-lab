@@ -5,10 +5,11 @@ import ClientLayout from '@/components/layout/ClientLayout';
 
 export const metadata: Metadata = {
   title: {
-    default: 'Next Starter',
-    template: '%s | Next Starter',
+    default: 'Visual Tech Lab',
+    template: '%s | Visual Tech Lab',
   },
-  description: 'Next.js 15 Starter Template',
+  description:
+    'Personal tech lab and online tools collection. Featuring experimental case studies and practical developer tools.',
   robots: {
     index: true,
     follow: true,

@@ -1,136 +1,110 @@
 <div align="center">
-  <img src="public/logo.svg" alt="Next.js Template Logo" width="120" height="120" />
+  <img src="public/logo.svg" alt="Visual Tech Lab Logo" width="120" height="120" />
 
-# 🚀 Next.js 项目模板
+# 🚀 Visual Tech Lab
 
-基于 [Next.js 15](https://nextjs.org) 构建的现代化 Web 应用模板，集成了最佳实践和常用工具。
+**技术实验室**
+
+个人技术探索与工具集合。这里记录了项目预研过程中的实验性案例，并提供开放的在线工具服务。
 
 </div>
 
 ## ✨ 特性
 
-- 📦 基于 Next.js 15 App Router
-- 🎨 集成 TailwindCSS 样式解决方案
-- 💪 TypeScript 类型支持
-- 🔍 ESLint + Prettier 代码规范
-- 🚦 Husky + lint-staged 提交检查
-- 🐳 Docker 容器化支持
-- 📱 响应式设计
-- 🔄 自动化部署配置
+- 🛠 **在线工具集**：提供常用的开发辅助工具，提升工作效率。
+- 🗺 **高性能地图**：基于 MapLibre GL 的高级地图交互示例，支持双屏同步、海量数据渲染。
+- 📊 **数据可视化**：集成 ECharts 等图表库，展示丰富的数据可视化效果。
+- ⚡ **现代技术栈**：采用 Next.js 15 (App Router)、TypeScript、TailwindCSS 构建。
+- 🧩 **模块化架构**：清晰的目录结构，将工具（Tools）与示例（Demos）分离，易于扩展。
+- 📱 **响应式设计**：完美适配桌面与移动端设备。
 
 ## 🛠️ 技术栈
 
-- **框架：** Next.js 15
-- **语言：** TypeScript
-- **样式：** TailwindCSS
-- **状态管理：** React Context + Hooks
+- **核心框架：** Next.js 15 (App Router)
+- **开发语言：** TypeScript
+- **样式方案：** TailwindCSS
+- **地图引擎：** MapLibre GL JS
+- **图表库：** ECharts / D3.js
+- **工具库：** Turf.js (地理空间分析), Lodash
 - **代码规范：** ESLint + Prettier
-- **提交规范：** Husky + Commitlint
-- **包管理器：** pnpm
-- **容器化：** Docker
+- **包管理：** pnpm
 
 ## 📦 项目结构
 
 ```bash
 src/
 ├── app/
-│   ├── api/                     # 接口入口（App Router 的 Route Handlers）
-│   │   ├── health/route.ts      # 示例：健康检查 GET /api/health
-│   │   ├── echo/                # 示例：Echo 接口目录（可添加 route.ts）
-│   │   └── users/               # 示例：用户接口目录（可添加 route.ts）
-│   ├── layout.tsx               # 页面布局
-│   └── page.tsx                 # 首页
-├── services/                    # 业务逻辑层（Service 层）
-│   ├── auth/                    # 认证相关业务模块
-│   └── demo/                    # 示例业务模块
-├── lib/                         # 第三方库配置 / 数据访问层
-│   ├── db/
-│   │   ├── drizzle.ts           # Drizzle + better-sqlite3 初始化
-│   │   └── schema.ts            # 数据表结构定义
-│   └── i18n/                    # 国际化配置
-├── utils/                       # 工具函数（纯函数，格式化/校验等）
-├── hooks/                       # 自定义 Hooks
-├── components/                  # UI 组件
-├── styles/                      # 全局样式
+│   ├── api/                     # 后端接口 (Route Handlers)
+│   ├── demos/                   # 交互示例模块
+│   │   ├── map/                 # 地图类示例
+│   │   │   ├── dual-sync/       # 双屏地图同步与 IDW 插值
+│   │   │   ├── hubei-data/      # 湖北数据可视化处理
+│   │   │   └── shared/          # 地图通用组件与 Hooks
+│   │   └── visualization/       # 可视化图表示例
+│   │       └── mext-chart/      # 高级图表展示
+│   ├── tools/                   # 在线工具模块 (Coming Soon)
+│   ├── layout.tsx               # 全局布局
+│   └── page.tsx                 # 落地页 (Landing Page)
+├── components/                  # 通用 UI 组件
+├── lib/                         # 第三方库配置
+├── services/                    # 业务逻辑服务
+├── utils/                       # 工具函数
 └── types/                       # 全局类型定义
 ```
-
-### 🧱 架构分层（推荐）
-- UI 层：`src/app/*` 页面与 `src/components/*` 组件
-- API 层：`src/app/api/*/route.ts` 请求入口，只做参数校验与调用服务
-- 服务层：`src/services/*` 业务规则与流程编排
-- 数据层：`src/lib/db/*` 连接配置与表结构（Drizzle + SQLite）
-- 通用层：`src/utils/*` 工具函数、`src/types/*` 类型定义
 
 ## 🚀 快速开始
 
 ### 开发环境
 
-1. 安装依赖：
+1. **安装依赖**：
 
 ```bash
 pnpm install
 ```
 
-2. 启动开发服务器：
+2. **启动开发服务器**：
 
 ```bash
 pnpm dev
 ```
 
-3. 在浏览器打开 [http://localhost:3000](http://localhost:3000)
+3. **访问项目**：
+   打开浏览器访问 [http://localhost:3000](http://localhost:3000)
 
 ### 生产环境
 
-1. 构建项目：
+1. **构建项目**：
 
 ```bash
 pnpm build
 ```
 
-2. 启动生产服务：
+2. **启动服务**：
 
 ```bash
 pnpm start
 ```
 
-### Docker 部署
+## 📚 主要功能演示
 
-1. 构建镜像：
+### 1. 双屏地图同步 (Dual Map Sync)
 
-```bash
-pnpm docker:build
-```
+- **路径**：`/demos/map/dual-sync`
+- **功能**：左右分屏显示不同视角的地图，支持缩放、移动操作的实时同步。集成 IDW（反距离加权）插值算法，可将离散点数据实时转换为网格热力图。
 
-2. 运行容器：
+### 2. 湖北数据可视化 (Hubei Data Vis)
 
-```bash
-pnpm docker:run
-```
+- **路径**：`/demos/map/hubei-data`
+- **功能**：专注于地理数据的处理与展示。支持 GeoJSON 数据的导入导出、属性编辑，以及基于边界的随机点位生成功能。
 
-## 📝 开发规范
+### 3. 图表可视化 (Chart Visualization)
 
-- 代码提交前会自动运行 ESLint 和 Prettier 检查
-- 提交信息必须符合 Conventional Commits 规范
-- 组件优先使用 Server Components
-- 确保所有代码都有适当的类型定义
-
-## 🔧 环境变量
-
-创建 `.env.local` 文件：
-
-```bash
-APP_ENV=development
-# 其他环境变量...
-```
-
-## 📚 相关文档
-
-- [Next.js 文档](https://nextjs.org/docs)
-- [TailwindCSS 文档](https://tailwindcss.com/docs)
-- [TypeScript 文档](https://www.typescriptlang.org/docs)
+- **路径**：`/demos/visualization/mext-chart`
+- **功能**：展示复杂的数据图表，结合热图与垂直剖面分析，提供直观的数据洞察。
 
 ## 🤝 贡献指南
+
+欢迎提交 Issue 或 Pull Request 来丰富这个实验室！
 
 1. Fork 本项目
 2. 创建新分支：`git checkout -b feature/your-feature`

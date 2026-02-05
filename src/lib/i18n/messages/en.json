@@ -1,10 +1,57 @@
 {
   "home": {
-    "title": "Next.js 15 Starter Template",
-    "description": "Clear separation of UI / Logic / API layers",
-    "getStarted": "Get Started",
-    "apiExamples": "API Examples",
-    "health": "Health Check",
-    "users": "Users API"
+    "hero": {
+      "title": "Tech Lab",
+      "description": "A personal tech exploration and tools collection. It archives experimental case studies and provides publicly accessible online tools.",
+      "ctaTools": "Tools",
+      "ctaDemo": "Labs"
+    },
+    "tools": {
+      "title": "Online Tools",
+      "description": "Public online utilities maintained and iterated by tool category.",
+      "cta": "Open Toolbox"
+    },
+    "demo": {
+      "title": "Labs",
+      "description": "Feasibility studies and interaction exploration, archived by research topics.",
+      "cta": "Browse Labs"
+    },
+    "footer": "© {year} Visual Tech Lab."
+  },
+  "demoIndex": {
+    "title": "Labs",
+    "description": "A collection of feasibility studies and interaction experiments. Each case is isolated for easy archiving and iteration.",
+    "backHome": "Back to Home",
+    "tools": "Tools",
+    "openCase": "Open",
+    "cards": {
+      "dualSync": {
+        "title": "Dual Map Sync",
+        "description": "MapLibre GL dual-view sync with pan/zoom linking and an IDW interpolation capability check."
+      },
+      "hubeiData": {
+        "title": "Geo Data Workshop",
+        "description": "GeoJSON import/export, attribute editing, random point generation, plus an API script execution test entry."
+      },
+      "mextChart": {
+        "title": "Chart Playground",
+        "description": "Chart component integration, data structure adaptation, and interaction testing for solution validation."
+      }
+    }
+  },
+  "toolsIndex": {
+    "title": "Online Tools",
+    "description": "Public tools hub. Tools are implemented as isolated modules and aggregated here as entries.",
+    "backHome": "Back to Home",
+    "demo": "Labs",
+    "building": {
+      "title": "Toolbox in Progress",
+      "description": "Entries are organized under /tools. New tools will be released as independent routes like /tools/xxx."
+    }
+  },
+  "webNav": {
+    "title": "Web Navigation",
+    "description": "Curated resources and frequently used developer websites",
+    "badge": "Curated Links"
   }
 }

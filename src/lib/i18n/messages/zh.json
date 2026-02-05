@@ -1,11 +1,57 @@
 {
   "home": {
-    "title": "Next.js 15 启动模板",
-    "description": "清晰的渲染层 / 逻辑层 / API 层拆分",
-    "getStarted": "开始使用",
-    "apiExamples": "API 示例",
-    "health": "健康检查",
-    "echo": "Echo 接口",
-    "users": "用户接口"
+    "hero": {
+      "title": "技术实验室",
+      "description": "个人技术探索与工具集合。这里记录了项目预研过程中的实验性案例，并提供开放的在线工具服务。",
+      "ctaTools": "在线工具",
+      "ctaDemo": "预研案例"
+    },
+    "tools": {
+      "title": "在线工具",
+      "description": "对外开放的在线工具集合，按工具类型分组维护与持续迭代。",
+      "cta": "进入工具箱"
+    },
+    "demo": {
+      "title": "预研案例",
+      "description": "技术可行性验证与交互探索，按项目预研主题沉淀与归档。",
+      "cta": "查看预研案例"
+    },
+    "footer": "© {year} Visual Tech Lab."
+  },
+  "demoIndex": {
+    "title": "预研案例",
+    "description": "技术可行性验证与交互探索的沉淀集合。每个案例独立成页，便于归档、复用与持续迭代。",
+    "backHome": "返回首页",
+    "tools": "在线工具",
+    "openCase": "打开案例",
+    "cards": {
+      "dualSync": {
+        "title": "双屏地图同步",
+        "description": "MapLibre GL 双屏联动示例，支持缩放与拖拽同步，并包含 IDW 插值分析能力验证。"
+      },
+      "hubeiData": {
+        "title": "数据可视化处理",
+        "description": "GeoJSON 数据导入导出、属性编辑、随机点生成等能力预研，并包含 API 脚本执行验证入口。"
+      },
+      "mextChart": {
+        "title": "图表可视化",
+        "description": "图表组件封装、数据结构适配与交互效果测试，用于验证图表方案落地路径。"
+      }
+    }
+  },
+  "toolsIndex": {
+    "title": "在线工具",
+    "description": "对外开放的在线工具集合页。工具按模块化方式独立实现，统一在此处入口聚合。",
+    "backHome": "返回首页",
+    "demo": "预研案例",
+    "building": {
+      "title": "工具箱建设中",
+      "description": "当前工具箱仍在建设中，新工具将逐步发布为独立路由，如 /tools/xxx。"
+    }
+  },
+  "webNav": {
+    "title": "网站导航",
+    "description": "精选常用的开发资源与工具网站",
+    "badge": "精选链接"
   }
 }

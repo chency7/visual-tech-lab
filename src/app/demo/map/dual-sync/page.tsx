@@ -4,17 +4,17 @@ import { useEffect, useMemo, useCallback } from 'react';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 // 工具函数和常量
-import { createMap } from './utils/initMap';
-import mockPoints from './mock/point.json';
+import { createMap } from '../shared/utils/initMap';
+import mockPoints from '../shared/mock/point.json';
 
 // 类型定义
-import type { MapConfig, MockPointsData, IdwConfig } from './types';
+import type { MapConfig, MockPointsData, IdwConfig } from '../shared/types';
 
 // 自定义 Hooks
-import { useMapState, useMapBusinessLogic, useMapSync } from './hooks';
+import { useMapState, useMapBusinessLogic, useMapSync } from '../shared/hooks';
 
 // 组件
-import { MapContainer } from './components';
+import { MapContainer } from '../shared/components';
 import Link from 'next/link';
 
 /**
