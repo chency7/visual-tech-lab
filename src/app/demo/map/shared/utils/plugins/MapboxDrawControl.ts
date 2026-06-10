@@ -8,6 +8,8 @@ type DrawEventFeature = {
   geometry: { type: string; coordinates: [number, number] };
 };
 
+type MapLibreControl = maplibregl.IControl;
+
 export interface MapboxDrawControlOptions {
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 }
@@ -28,7 +30,12 @@ export class MapboxDrawControl {
         {
           id: 'gl-draw-point-inactive',
           type: 'circle',
-          filter: ['all', ['==', '$type', 'Point'], ['!=', 'meta', 'midpoint'], ['!=', 'active', 'true']],
+          filter: [
+            'all',
+            ['==', '$type', 'Point'],
+            ['!=', 'meta', 'midpoint'],
+            ['!=', 'active', 'true'],
+          ],
           paint: {
             'circle-radius': 4,
             'circle-color': '#3bb2d0',
@@ -39,7 +46,12 @@ export class MapboxDrawControl {
         {
           id: 'gl-draw-point-active',
           type: 'circle',
-          filter: ['all', ['==', '$type', 'Point'], ['!=', 'meta', 'midpoint'], ['==', 'active', 'true']],
+          filter: [
+            'all',
+            ['==', '$type', 'Point'],
+            ['!=', 'meta', 'midpoint'],
+            ['==', 'active', 'true'],
+          ],
           paint: {
             'circle-radius': 5,
             'circle-color': '#fbb03b',
@@ -114,7 +126,7 @@ export class MapboxDrawControl {
       ],
     });
 
-    map.addControl(this.draw, options?.position ?? 'top-right');
+    map.addControl(this.draw as unknown as MapLibreControl, options?.position ?? 'top-right');
   }
 
   get instance() {
@@ -150,6 +162,6 @@ export class MapboxDrawControl {
   }
 
   remove() {
-    this.map.removeControl(this.draw);
+    this.map.removeControl(this.draw as unknown as MapLibreControl);
   }
 }

@@ -36,6 +36,14 @@
       "mextChart": {
         "title": "Chart Playground",
         "description": "Chart component integration, data structure adaptation, and interaction testing for solution validation."
+      },
+      "chinaFull": {
+        "title": "China Boundary Preview",
+        "description": "Render nationwide province boundaries from 100000_full GeoJSON for future diff and hollowing experiments."
+      },
+      "radarFilter": {
+        "title": "Radar Threshold Filter",
+        "description": "Load radar precipitation image via Mapbox raster layer, filter by color threshold ranges to display different precipitation intensity zones."
       }
     }
   },

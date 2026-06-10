@@ -1,6 +1,10 @@
 import type maplibregl from 'maplibre-gl';
 import { point, lineString, featureCollection } from '@turf/turf';
-import type { FeatureCollection as GeoFeatureCollection, Point as GeoPoint, LineString as GeoLineString } from 'geojson';
+import type {
+  FeatureCollection as GeoFeatureCollection,
+  Point as GeoPoint,
+  LineString as GeoLineString,
+} from 'geojson';
 
 type LngLat = [number, number];
 
@@ -11,9 +15,7 @@ function haversineDistance(a: LngLat, b: LngLat): number {
   const dLon = toRad(b[0] - a[0]);
   const lat1 = toRad(a[1]);
   const lat2 = toRad(b[1]);
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
@@ -57,9 +59,8 @@ export class MeasureControl implements maplibregl.IControl {
       </svg>
     `;
 
-
     const label = document.createElement('div');
-    label.style = {
+    Object.assign(label.style, {
       fontSize: '12px',
       fontFamily: 'monospace',
       padding: '4px 6px',
@@ -69,7 +70,7 @@ export class MeasureControl implements maplibregl.IControl {
       borderRadius: '4px',
       minWidth: '30px',
       textAlign: 'center',
-    } as any;
+    });
     label.textContent = '0 m';
 
     container.appendChild(toggleBtn);
@@ -77,7 +78,8 @@ export class MeasureControl implements maplibregl.IControl {
 
     const updateLabel = () => {
       const meters = this._total;
-      label.textContent = meters < 1000 ? `${meters.toFixed(1)} m` : `${(meters / 1000).toFixed(2)} km`;
+      label.textContent =
+        meters < 1000 ? `${meters.toFixed(1)} m` : `${(meters / 1000).toFixed(2)} km`;
     };
 
     const addSourcesAndLayers = () => {
@@ -123,9 +125,13 @@ export class MeasureControl implements maplibregl.IControl {
 
     const updateGeoJSON = () => {
       if (!this._map) return;
-      const pointsFC: GeoFeatureCollection<GeoPoint> = featureCollection(this._points.map((p) => point(p)));
+      const pointsFC: GeoFeatureCollection<GeoPoint> = featureCollection(
+        this._points.map((p) => point(p))
+      );
       const lineFC: GeoFeatureCollection<GeoLineString> =
-        this._points.length >= 2 ? featureCollection([lineString(this._points)]) : featureCollection([]);
+        this._points.length >= 2
+          ? featureCollection([lineString(this._points)])
+          : featureCollection([]);
       const pointsSource = this._map.getSource(this.pointsSourceId) as maplibregl.GeoJSONSource;
       const lineSource = this._map.getSource(this.lineSourceId) as maplibregl.GeoJSONSource;
       pointsSource?.setData(pointsFC);
@@ -165,7 +171,8 @@ export class MeasureControl implements maplibregl.IControl {
     });
 
     const setup = () => addSourcesAndLayers();
-    if (this._map?.isStyleLoaded()) setup(); else this._map?.once('load', setup);
+    if (this._map?.isStyleLoaded()) setup();
+    else this._map?.once('load', setup);
 
     this._container = container;
     return container;

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Map, BarChart3, Database, ArrowRight } from 'lucide-react';
+import { Map, BarChart3, Database, Globe2, CloudRain, ArrowRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 export default function DemoIndexPage() {
@@ -79,6 +79,40 @@ export default function DemoIndexPage() {
             {t('cards.mextChart.description')}
           </p>
           <div className="flex items-center text-sm font-medium text-purple-600 dark:text-purple-400">
+            {t('openCase')}{' '}
+            <ArrowRight size={16} className="ml-1 transition-transform group-hover:translate-x-1" />
+          </div>
+        </Link>
+
+        <Link
+          href="/demo/map/china-full"
+          className="group rounded-2xl border border-zinc-200 bg-white p-6 transition-all hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900"
+        >
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
+            <Globe2 size={24} />
+          </div>
+          <h2 className="mb-2 text-xl font-semibold">{t('cards.chinaFull.title')}</h2>
+          <p className="mb-4 text-sm text-zinc-500 dark:text-zinc-400">
+            {t('cards.chinaFull.description')}
+          </p>
+          <div className="flex items-center text-sm font-medium text-amber-600 dark:text-amber-400">
+            {t('openCase')}{' '}
+            <ArrowRight size={16} className="ml-1 transition-transform group-hover:translate-x-1" />
+          </div>
+        </Link>
+
+        <Link
+          href="/demo/map/radar-filter"
+          className="group rounded-2xl border border-zinc-200 bg-white p-6 transition-all hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900"
+        >
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400">
+            <CloudRain size={24} />
+          </div>
+          <h2 className="mb-2 text-xl font-semibold">{t('cards.radarFilter.title')}</h2>
+          <p className="mb-4 text-sm text-zinc-500 dark:text-zinc-400">
+            {t('cards.radarFilter.description')}
+          </p>
+          <div className="flex items-center text-sm font-medium text-cyan-600 dark:text-cyan-400">
             {t('openCase')}{' '}
             <ArrowRight size={16} className="ml-1 transition-transform group-hover:translate-x-1" />
           </div>

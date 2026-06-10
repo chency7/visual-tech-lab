@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "mapbox-maplibre-migration": {
+      "source": "mapbox/mapbox-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/mapbox-maplibre-migration/SKILL.md",
+      "computedHash": "54d432c1c775cdb550c7778cae9eed401bd27efcd267809b7e8debd192c028ff"
+    },
+    "mapbox-web-integration-patterns": {
+      "source": "mapbox/mapbox-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/mapbox-web-integration-patterns/SKILL.md",
+      "computedHash": "599e8511ae673009fa53140c269c6f0e55848561c63f1a385bc6dd7d7c11a6dd"
+    },
+    "mapbox-web-performance-patterns": {
+      "source": "mapbox/mapbox-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/mapbox-web-performance-patterns/SKILL.md",
+      "computedHash": "0bab1e72dc49350b735a8f8fbfa3fe1b602b7f965232bfc1b3b42088d460e276"
+    }
+  }
+}

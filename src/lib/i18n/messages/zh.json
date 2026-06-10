@@ -36,6 +36,14 @@
       "mextChart": {
         "title": "图表可视化",
         "description": "图表组件封装、数据结构适配与交互效果测试，用于验证图表方案落地路径。"
+      },
+      "chinaFull": {
+        "title": "全国边界预览",
+        "description": "基于 100000_full 全国 GeoJSON 数据渲染省级边界，用于后续差异分析与镂空算法预研。"
+      },
+      "radarFilter": {
+        "title": "雷达图阈值过滤",
+        "description": "基于 Mapbox 栅格图层加载雷达降水图，支持按颜色阈值区间过滤展示不同降水强度区域。"
       }
     }
   },
