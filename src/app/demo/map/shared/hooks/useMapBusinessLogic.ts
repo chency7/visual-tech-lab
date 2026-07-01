@@ -1,59 +1,48 @@
 import { useCallback } from 'react';
-import { HUNAN_BOUNDS } from '../const';
-import { toLngLatBounds } from '../utils/bounds';
-
-// 1.前端获取离散点数据。
-// 2.使用 Turf.js 的interpolate方法(基于反距离权重法-IDW)或专门的 kriging.js 库(实现克里金法)进行空间插值，生成规则网格数据1
-// 3.调用Turf.js的isobands 或isolines函数，基于网格数据生成等值面/等值线的GeoJSON矢量数据。
-// 4.将GeoJSON数据源添加到Mapbox地图，配置填充图层样式进行可视化。
-
-import {
-  generateRectGrid,
-  buildLabelGridFilter,
-  applyIdwToLabelLayer,
-  applyIdwIsobandsFillLayer,
-  type StationDatum,
-} from '../utils/grid';
+import { BOUNDARY_LAYER_IDS, HUNAN_BOUNDS } from '../const';
 import type {
   MapInstance,
-  StationData,
   MockPointsData,
+  StationData,
+  StationDatum,
   StationFeatureCollection,
-  IdwConfig
+  StainData,
 } from '../types';
-// isobands 功能已移除
+import { toLngLatBounds } from '../utils/bounds';
+import { buildLabelGridFilter, generateRectGrid } from '../utils/grid';
+
+function getFirstBoundaryLayerId(map: MapInstance) {
+  return BOUNDARY_LAYER_IDS.find((layerId) => map.getLayer(layerId));
+}
 
 /**
  * 地图业务逻辑 Hook
- * 封装网格业务、点位业务和IDW转换逻辑
+ * 封装网格业务、点位业务和站点数据标准化逻辑。
  */
 export function useMapBusinessLogic() {
-  /**
-   * 添加网格业务逻辑到地图
-   */
-  const addGridBusiness = useCallback((map: MapInstance) => {
-    // 调整地图视野到湖南省范围
+  const fitToHunan = useCallback((map: MapInstance) => {
     map.fitBounds(toLngLatBounds(HUNAN_BOUNDS), {
       padding: { top: 50, right: 20, bottom: 20, left: 20 },
       maxZoom: 9,
     });
+  }, []);
 
-    // 生成网格数据
+  const addGridBusiness = useCallback((map: MapInstance) => {
+    fitToHunan(map);
+
     const gridFC = generateRectGrid(HUNAN_BOUNDS, 100, 100);
     const gridSourceId = 'hunan-grid-source';
     const gridFillLayerId = 'hunan-grid-fill';
     const gridLabelLayerId = 'hunan-grid-labels';
 
-    // 添加网格数据源
     if (!map.getSource(gridSourceId)) {
       map.addSource(gridSourceId, {
         type: 'geojson',
         data: gridFC,
-        tolerance: 0
+        tolerance: 0,
       });
     }
 
-    // 添加网格填充图层
     if (!map.getLayer(gridFillLayerId)) {
       map.addLayer({
         id: gridFillLayerId,
@@ -84,7 +73,6 @@ export function useMapBusinessLogic() {
       });
     }
 
-    // 添加网格标签图层
     if (!map.getLayer(gridLabelLayerId)) {
       map.addLayer({
         id: gridLabelLayerId,
@@ -105,134 +93,132 @@ export function useMapBusinessLogic() {
         filter: buildLabelGridFilter(),
       });
     }
-  }, []);
+  }, [fitToHunan]);
 
-  /**
-   * 处理原始点位数据，转换为标准格式
-   */
+  const addStainBusiness = useCallback(
+    (map: MapInstance, stainData: StainData) => {
+      fitToHunan(map);
+
+      const sourceId = 'hunan-backend-stain-source';
+      const fillLayerId = 'hunan-backend-stain-fill';
+      const stainFC = stainData.body.data;
+
+      if (!map.getSource(sourceId)) {
+        map.addSource(sourceId, {
+          type: 'geojson',
+          data: stainFC,
+          tolerance: 0,
+        });
+      }
+
+      if (!map.getLayer(fillLayerId)) {
+        map.addLayer({
+          id: fillLayerId,
+          type: 'fill',
+          source: sourceId,
+          paint: {
+            'fill-color': ['coalesce', ['get', 'color'], 'rgba(255, 255, 255, 0)'],
+            'fill-opacity': 0.9,
+          },
+        }, getFirstBoundaryLayerId(map));
+      } else {
+        const beforeLayerId = getFirstBoundaryLayerId(map);
+        if (beforeLayerId) {
+          map.moveLayer(fillLayerId, beforeLayerId);
+        }
+      }
+    },
+    [fitToHunan]
+  );
+
   const processStationData = useCallback((mockPoints: MockPointsData): StationData[] => {
-    const raw = mockPoints?.body?.data ?? [];
+    const raw = Array.isArray(mockPoints?.body)
+      ? mockPoints.body
+      : mockPoints?.body?.data ?? [];
     return raw
-      .map((d) => ({
-        lon: Number(d.lon),
-        lat: Number(d.lat),
-        pre: Number(d.pre ?? 0),
-        stationCode: d.stationCode,
-        stationName: d.stationName,
+      .map((datum) => ({
+        lon: Number(datum.lon),
+        lat: Number(datum.lat),
+        pre: Number(datum.pre ?? 0),
+        stationCode: datum.stationCode,
+        stationName: datum.stationName,
       }))
-      .filter((s) => Number.isFinite(s.lon) && Number.isFinite(s.lat));
+      .filter((station) => Number.isFinite(station.lon) && Number.isFinite(station.lat));
   }, []);
 
-  /**
-   * 将站点数据转换为GeoJSON格式
-   */
-  const createStationFeatureCollection = useCallback((stations: StationData[]): StationFeatureCollection => {
-    const features = stations.map((d, idx) => ({
-      type: 'Feature' as const,
-      geometry: {
-        type: 'Point' as const,
-        coordinates: [d.lon, d.lat]
-      },
-      properties: {
-        pre: d.pre,
-        idx,
-        stationCode: d.stationCode,
-        stationName: d.stationName,
-      },
-    }));
-
-    return { type: 'FeatureCollection', features };
-  }, []);
-
-  /**
-   * 添加点位业务逻辑到地图
-   */
-  const addPointsBusiness = useCallback((map: MapInstance, mockPoints: MockPointsData) => {
-    const stations = processStationData(mockPoints);
-    const pointsFC = createStationFeatureCollection(stations);
-
-    const pointsSourceId = 'hunan-random-points';
-    const pointsLayerId = 'hunan-random-points-labels';
-
-    // 添加点位数据源
-    if (!map.getSource(pointsSourceId)) {
-      map.addSource(pointsSourceId, {
-        type: 'geojson',
-        data: pointsFC
-      });
-    }
-
-    // 添加点位标签图层
-    if (!map.getLayer(pointsLayerId)) {
-      map.addLayer({
-        id: pointsLayerId,
-        type: 'symbol',
-        source: pointsSourceId,
-        minzoom: 0,
-        maxzoom: 12,
-        layout: {
-          'text-field': ['to-string', ['get', 'pre']],
-          'text-size': 11,
-          'symbol-placement': 'point',
-          'text-allow-overlap': false,
+  const createStationFeatureCollection = useCallback(
+    (stations: StationData[]): StationFeatureCollection => {
+      const features = stations.map((station, idx) => ({
+        type: 'Feature' as const,
+        geometry: {
+          type: 'Point' as const,
+          coordinates: [station.lon, station.lat],
         },
-        paint: {
-          'text-color': '#111827',
-          'text-halo-color': '#ffffff',
-          'text-halo-width': 0.8,
+        properties: {
+          pre: station.pre,
+          idx,
+          stationCode: station.stationCode,
+          stationName: station.stationName,
         },
-      });
-    }
-  }, [processStationData, createStationFeatureCollection]);
+      }));
 
-  /**
-   * 执行IDW插值转换
-   */
-  const transformIDW = useCallback((
-    map: MapInstance,
-    mockPoints: MockPointsData,
-    config: IdwConfig,
-    onComplete?: () => void
-  ) => {
-    if (!map) return;
+      return { type: 'FeatureCollection', features };
+    },
+    []
+  );
 
-    if (!map.isStyleLoaded()) {
-      map.once('load', () => transformIDW(map, mockPoints, config, onComplete));
-      return;
-    }
+  const addPointsBusiness = useCallback(
+    (map: MapInstance, mockPoints: MockPointsData) => {
+      const stations = processStationData(mockPoints);
+      const pointsFC = createStationFeatureCollection(stations);
+      const pointsSourceId = 'hunan-random-points';
+      const pointsLayerId = 'hunan-random-points-labels';
 
-    const stations = processStationData(mockPoints);
-    const stationDatums: StationDatum[] = stations.map(s => ({
-      lon: s.lon,
-      lat: s.lat,
-      pre: s.pre,
-    }));
+      if (!map.getSource(pointsSourceId)) {
+        map.addSource(pointsSourceId, {
+          type: 'geojson',
+          data: pointsFC,
+        });
+      }
 
-    applyIdwToLabelLayer(map, HUNAN_BOUNDS, stationDatums, config);
-    // applyIdwIsobandsFillLayer(map, HUNAN_BOUNDS, stationDatums, {
-    //   cols: config.cols,
-    //   rows: config.rows,
-    //   power: config.power,
-    //   hidePointsLayerId: config.hidePointsLayerId,
-    //   hideLabelLayerId: 'hunan-idw-grid-labels',
-    //   breaks: config.breaks,
-    //   colors: config.colors,
-    //   neighbors: config.neighbors,
-    //   maxDistanceDeg: config.maxDistanceDeg,
-    // });
-    onComplete?.();
-  }, [processStationData]);
+      if (!map.getLayer(pointsLayerId)) {
+        map.addLayer({
+          id: pointsLayerId,
+          type: 'symbol',
+          source: pointsSourceId,
+          minzoom: 0,
+          maxzoom: 12,
+          layout: {
+            'text-field': ['to-string', ['get', 'pre']],
+            'text-size': 11,
+            'symbol-placement': 'point',
+            'text-allow-overlap': false,
+          },
+          paint: {
+            'text-color': '#111827',
+            'text-halo-color': '#ffffff',
+            'text-halo-width': 0.8,
+          },
+        });
+      }
+    },
+    [createStationFeatureCollection, processStationData]
+  );
 
-  /**
-   * 依据IDW格点生成等值面色斑（填充图层）
-   * - 独立使用等值面数据源，避免与标签图层冲突
-   * - 使用给定阈值进行颜色分段
-   */
-  // 已移除：transformIsobands 等值面色斑功能
+  const getStationDatums = useCallback(
+    (mockPoints: MockPointsData): StationDatum[] =>
+      processStationData(mockPoints).map((station) => ({
+        lon: station.lon,
+        lat: station.lat,
+        pre: station.pre,
+      })),
+    [processStationData]
+  );
 
   return {
     addGridBusiness,
+    addStainBusiness,
     addPointsBusiness,
-    transformIDW,
+    getStationDatums,
   };
 }

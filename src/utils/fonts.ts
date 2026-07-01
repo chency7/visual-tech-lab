@@ -1,19 +1,15 @@
-import { Inter, Pacifico } from 'next/font/google';
 import localFont from 'next/font/local';
 
-export const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'block',
-  weight: ['400'],
-  fallback: ['system-ui', 'sans-serif'],
-});
-
-export const pacifico = Pacifico({
-  weight: ['400'],
-  subsets: ['latin'],
-  display: 'block',
+export const pacifico = localFont({
+  src: [
+    {
+      path: '../../public/fonts/woff2/Pacifico.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+  ],
   variable: '--font-Pacifico',
+  display: 'block',
   fallback: ['cursive', 'system-ui'],
 });
 

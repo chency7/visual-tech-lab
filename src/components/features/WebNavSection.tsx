@@ -35,10 +35,10 @@ const WebNavCard = ({
       href={item.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group relative flex flex-col gap-3 rounded-xl border border-zinc-200/80 bg-white/50 p-4 backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-indigo-300 hover:shadow-lg hover:shadow-indigo-500/10 dark:border-zinc-800/80 dark:bg-zinc-900/50 dark:hover:border-indigo-700"
+      className="bg-white/38 hover:bg-white/64 group relative flex flex-col gap-3 rounded-lg border border-black/[0.06] p-4 backdrop-blur-sm transition duration-300 hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-teal-500/35 active:translate-y-0 dark:border-white/[0.08] dark:bg-white/[0.04] dark:hover:bg-white/[0.07]"
     >
       <div className="flex items-start justify-between">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-50 text-zinc-500 transition-colors group-hover:bg-indigo-50 group-hover:text-indigo-600 dark:bg-zinc-800 dark:text-zinc-400 dark:group-hover:bg-indigo-900/30 dark:group-hover:text-indigo-400">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-zinc-950/[0.055] text-zinc-600 transition-colors group-hover:bg-zinc-950 group-hover:text-white dark:bg-white/[0.08] dark:text-zinc-400 dark:group-hover:bg-zinc-100 dark:group-hover:text-zinc-950">
           {!iconError && domain ? (
             <Image
               src={faviconUrl}
@@ -55,12 +55,12 @@ const WebNavCard = ({
         </div>
         <ExternalLink
           size={14}
-          className="text-zinc-300 transition-colors group-hover:text-indigo-400 dark:text-zinc-700"
+          className="text-zinc-400 transition-colors group-hover:text-zinc-700 dark:text-zinc-600 dark:group-hover:text-zinc-300"
         />
       </div>
 
       <div>
-        <h4 className="font-medium text-zinc-900 transition-colors group-hover:text-indigo-600 dark:text-zinc-100 dark:group-hover:text-indigo-400">
+        <h4 className="font-medium text-zinc-950 transition-colors group-hover:text-zinc-700 dark:text-zinc-100 dark:group-hover:text-zinc-300">
           {item.title}
         </h4>
         <p className="mt-1 line-clamp-2 text-xs text-zinc-500 dark:text-zinc-400">
@@ -81,10 +81,10 @@ export default function WebNavSection() {
     <section id="web-nav" className="mb-20">
       <div className="mb-10 flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">{t('title')}</h2>
+          <h2 className="font-display text-3xl leading-none">{t('title')}</h2>
           <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">{t('description')}</p>
         </div>
-        <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
+        <span className="rounded-md bg-zinc-950/[0.055] px-3 py-1 text-xs font-medium text-zinc-600 dark:bg-white/[0.08] dark:text-zinc-400">
           {t('badge')}
         </span>
       </div>
@@ -95,7 +95,7 @@ export default function WebNavSection() {
           return (
             <div key={idx}>
               <div className="mb-5 flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-zinc-950/[0.055] text-zinc-600 dark:bg-white/[0.08] dark:text-zinc-400">
                   <Icon size={18} />
                 </div>
                 <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">
@@ -103,7 +103,7 @@ export default function WebNavSection() {
                 </h3>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {category.items.map((item, itemIdx) => (
                   <WebNavCard key={itemIdx} item={item} pick={pick} />
                 ))}

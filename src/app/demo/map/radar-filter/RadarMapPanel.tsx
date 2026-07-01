@@ -4,7 +4,7 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, CloudRain } from 'lucide-react';
 import { RadarFilterPanel } from './RadarFilterPanel';
 import { useRadarGpuLayer } from './useRadarGpuLayer';
 import { foxGisVectorStyle } from '../shared/const';
@@ -33,7 +33,6 @@ function createRadarMap(container: HTMLDivElement): maplibregl.Map {
     maxZoom: MAP_MAX_ZOOM,
     attributionControl: false,
     canvasContextAttributes: {
-      // 页面不需要导出 canvas，关闭 preserveDrawingBuffer 可以减少显存和渲染成本。
       preserveDrawingBuffer: false,
     },
   });
@@ -88,13 +87,11 @@ function ensureCompareRadarLayer(map: maplibregl.Map, visible: boolean): void {
 }
 
 export default function RadarMapPanel() {
-  // ── DOM 与 MapLibre 实例引用 ──
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const compareMapContainerRef = useRef<HTMLDivElement>(null);
   const compareMapRef = useRef<maplibregl.Map | null>(null);
 
-  // ── React 状态：只保存会影响 UI 的信息 ──
   const [mapLoaded, setMapLoaded] = useState(false);
   const [compareMapLoaded, setCompareMapLoaded] = useState(false);
   const [radarVisible, setRadarVisible] = useState(false);
@@ -105,11 +102,9 @@ export default function RadarMapPanel() {
     thresholds.map((_threshold, index) => index)
   );
 
-  // ── 运行时引用：保存最新选择，避免地图事件里频繁触发 React render ──
   const selectedIndexesRef = useRef<number[]>(thresholds.map((_threshold, index) => index));
   const layersReadyRef = useRef(false);
   const sourceReadyRef = useRef(false);
-  // 同步标志：A 地图 jumpTo B 后，B 也会触发 move；用它避免互相递归同步。
   const isSyncingRef = useRef(false);
 
   const { initGpuRadarLayer, setBandSelectionVisibility, setVisibility } =
@@ -129,14 +124,12 @@ export default function RadarMapPanel() {
     const map = mapRef.current;
     if (!map || !map.isStyleLoaded()) return;
 
-    // 左侧过滤视图走 WebGL custom layer，GPU 根据当前色域实时 discard 像素。
     initGpuRadarLayer(map);
     setBandSelectionVisibility(map, selectedIndexesRef.current);
     markSourceReady(true);
     markLayersReady(true);
   }, [initGpuRadarLayer, markLayersReady, markSourceReady, setBandSelectionVisibility]);
 
-  // ── 初始化左侧过滤地图 ──
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
@@ -155,7 +148,6 @@ export default function RadarMapPanel() {
     };
   }, []);
 
-  // ── 初始化对比地图（右侧，显示原始雷达图，不做过滤）──
   useEffect(() => {
     if (!compareMapContainerRef.current || compareMapRef.current) return;
 
@@ -175,7 +167,6 @@ export default function RadarMapPanel() {
     };
   }, []);
 
-  // ── 实时同步两边地图的缩放/平移/旋转/俯仰 ──
   useEffect(() => {
     const map = mapRef.current;
     const compareMap = compareMapRef.current;
@@ -204,7 +195,6 @@ export default function RadarMapPanel() {
     };
   }, [compareMapLoaded, mapLoaded]);
 
-  // 如果用户先打开雷达、右侧地图后加载完成，这里补一次原始图层创建，避免右侧空白。
   useEffect(() => {
     const compareMap = compareMapRef.current;
     if (!radarVisible || !compareMapLoaded || !compareMap) return;
@@ -225,7 +215,6 @@ export default function RadarMapPanel() {
     ensureRadarLayers();
   }, [ensureRadarLayers, mapLoaded, radarVisible]);
 
-  // ── 开关雷达图层 ──
   const handleRadarVisibleChange = useCallback(
     (visible: boolean) => {
       setRadarVisible(visible);
@@ -239,7 +228,6 @@ export default function RadarMapPanel() {
         }
       }
 
-      // 右侧对比视图使用普通 raster image source，始终展示未过滤的原始雷达图。
       const compareMap = compareMapRef.current;
       if (compareMap?.isStyleLoaded()) {
         try {
@@ -267,56 +255,71 @@ export default function RadarMapPanel() {
   );
 
   return (
-    <div className="flex h-full w-full">
-      {/* 左侧：过滤面板 */}
-      <div className="flex w-80 shrink-0 flex-col border-r border-zinc-200 bg-white p-4">
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold text-zinc-800">雷达图阈值过滤</h2>
+    <div className="flex h-full w-full bg-zinc-50">
+      {/* ── 左侧面板 ── */}
+      <div className="flex w-[260px] shrink-0 flex-col border-r border-zinc-200 bg-white shadow-sm">
+        {/* 面板头部 */}
+        <div className="flex items-center justify-between border-b border-zinc-100 px-3 py-2.5">
           <Link
-            href="/"
-            className="inline-flex items-center gap-1 rounded border border-zinc-200 bg-white px-2 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-50"
+            href="/demo"
+            className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-700"
           >
             <ArrowLeft size={13} />
-            首页
+            返回
           </Link>
+          <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-[10px] font-medium text-zinc-500">
+            预研案例
+          </span>
         </div>
-        <RadarFilterPanel
-          thresholds={thresholds}
-          selectedIndexes={selectedIndexes}
-          onSelectionChange={handleSelectionChange}
-          radarVisible={radarVisible}
-          onRadarVisibleChange={handleRadarVisibleChange}
-        />
+
+        {/* 面板内容 */}
+        <div className="flex-1 overflow-y-auto px-3 py-3">
+          <RadarFilterPanel
+            thresholds={thresholds}
+            selectedIndexes={selectedIndexes}
+            onSelectionChange={handleSelectionChange}
+            radarVisible={radarVisible}
+            onRadarVisibleChange={handleRadarVisibleChange}
+          />
+        </div>
       </div>
 
-      {/* 中间：过滤后地图 */}
-      <div className="relative flex-1 border-r border-zinc-200">
-        <div className="absolute left-2 top-2 z-10 rounded bg-black/60 px-2 py-0.5 text-xs text-white">
-          过滤视图
-        </div>
-        <div ref={mapContainerRef} className="h-full w-full" />
-
-        {radarVisible && sourceReady && !layersReady && (
-          <div className="absolute right-3 top-3 z-20 rounded bg-white/90 px-3 py-1.5 text-xs text-zinc-600 shadow">
-            正在准备筛选...
+      {/* ── 地图区域 ── */}
+      <div className="flex flex-1 gap-0">
+        {/* 过滤视图 */}
+        <div className="relative flex-1">
+          <div className="pointer-events-none absolute left-3 top-3 z-10 flex items-center gap-1.5 rounded-md bg-zinc-900/65 px-2.5 py-1 text-xs text-white/90 backdrop-blur-sm">
+            <CloudRain size={13} className="text-cyan-300" />
+            过滤视图
           </div>
-        )}
+          <div ref={mapContainerRef} className="h-full w-full" />
 
-        {radarVisible && !sourceReady && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/20">
-            <div className="rounded-lg bg-white px-4 py-2 text-sm text-zinc-600 shadow-lg">
-              正在加载雷达图层...
+          {radarVisible && sourceReady && !layersReady && (
+            <div className="absolute right-3 top-3 z-20 rounded-md bg-white/90 px-3 py-1.5 text-xs text-zinc-600 shadow-sm backdrop-blur-sm">
+              正在准备筛选...
             </div>
-          </div>
-        )}
-      </div>
+          )}
 
-      {/* 右侧：对比地图（原始雷达图） */}
-      <div className="relative flex-1">
-        <div className="absolute left-2 top-2 z-10 rounded bg-black/60 px-2 py-0.5 text-xs text-white">
-          原始视图
+          {radarVisible && !sourceReady && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/10 backdrop-blur-[1px]">
+              <div className="rounded-lg bg-white px-4 py-2 text-sm text-zinc-600 shadow-lg">
+                正在加载雷达图层...
+              </div>
+            </div>
+          )}
         </div>
-        <div ref={compareMapContainerRef} className="h-full w-full" />
+
+        {/* 分割线 */}
+        <div className="w-[3px] shrink-0 bg-zinc-200" />
+
+        {/* 原始视图 */}
+        <div className="relative flex-1">
+          <div className="pointer-events-none absolute left-3 top-3 z-10 flex items-center gap-1.5 rounded-md bg-zinc-900/65 px-2.5 py-1 text-xs text-white/90 backdrop-blur-sm">
+            <CloudRain size={13} className="text-zinc-400" />
+            原始视图
+          </div>
+          <div ref={compareMapContainerRef} className="h-full w-full" />
+        </div>
       </div>
     </div>
   );

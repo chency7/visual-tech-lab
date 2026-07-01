@@ -1,7 +1,9 @@
 import './global.css';
 import { Metadata } from 'next';
-import { inter, pacifico, lxgwWenKai, calSans } from '@/utils/fonts';
+import { cookies } from 'next/headers';
+import { pacifico, lxgwWenKai, calSans } from '@/utils/fonts';
 import ClientLayout from '@/components/layout/ClientLayout';
+import type { Locale } from '@/components/providers/i18n-provider';
 
 export const metadata: Metadata = {
   title: {
@@ -26,15 +28,19 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies();
+  const cookieLocale = cookieStore.get('NEXT_LOCALE')?.value;
+  const initialLocale: Locale = cookieLocale === 'en' ? 'en' : 'zh';
+
   return (
     <html
-      lang="zh"
+      lang={initialLocale}
       className={[lxgwWenKai.variable, pacifico.variable, calSans.variable].join(' ')}
       suppressHydrationWarning
     >
       <body>
-        <ClientLayout>{children}</ClientLayout>
+        <ClientLayout initialLocale={initialLocale}>{children}</ClientLayout>
       </body>
     </html>
   );

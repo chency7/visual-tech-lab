@@ -3,9 +3,15 @@
 import React, { useEffect } from 'react';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { usePathname } from 'next/navigation';
-import { I18nProvider } from '@/components/providers/i18n-provider';
+import { I18nProvider, type Locale } from '@/components/providers/i18n-provider';
 
-export default function ClientLayout({ children }: { children: React.ReactNode }) {
+export default function ClientLayout({
+  children,
+  initialLocale,
+}: {
+  children: React.ReactNode;
+  initialLocale: Locale;
+}) {
   const pathname = usePathname();
 
   useEffect(() => {
@@ -15,7 +21,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <React.Suspense fallback={<div className="p-4 text-sm text-zinc-500">Loading...</div>}>
-        <I18nProvider>{children}</I18nProvider>
+        <I18nProvider initialLocale={initialLocale}>{children}</I18nProvider>
       </React.Suspense>
     </ThemeProvider>
   );

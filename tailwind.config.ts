@@ -26,10 +26,8 @@ module.exports = {
       },
       fontFamily: {
         sans: [
-          "var(--font-inter)",
-          ...defaultTheme.fontFamily.sans,
-          "var(--font-Pacifico)",
           "var(--font-wenkai)",
+          ...defaultTheme.fontFamily.sans,
           "sans-serif",
         ],
         display: ["var(--font-calsans)"],

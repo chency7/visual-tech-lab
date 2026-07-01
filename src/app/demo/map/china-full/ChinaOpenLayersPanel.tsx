@@ -36,7 +36,7 @@ export function ChinaOpenLayersPanel() {
 
     const tileSource = new VectorTileSource({
       format: new MVT(),
-      url: 'http://localhost:1234/api/tilesets/430000/{z}/{x}/{y}.pbf',
+      url: 'http://10.111.100.230:1235/api/tilesets/430000/{z}/{x}/{y}.pbf',
     });
 
     const tileLayer = new VectorTileLayer({

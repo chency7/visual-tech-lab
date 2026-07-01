@@ -25,17 +25,13 @@
     "tools": "在线工具",
     "openCase": "打开案例",
     "cards": {
-      "dualSync": {
-        "title": "双屏地图同步",
-        "description": "MapLibre GL 双屏联动示例，支持缩放与拖拽同步，并包含 IDW 插值分析能力验证。"
+      "contourCompare": {
+        "title": "色斑图对比",
+        "description": "后端 Java wcontour 平滑等值面与前端 IDW 插值 + Chaikin 平滑色斑图对比验证。"
       },
       "hubeiData": {
         "title": "数据可视化处理",
         "description": "GeoJSON 数据导入导出、属性编辑、随机点生成等能力预研，并包含 API 脚本执行验证入口。"
-      },
-      "mextChart": {
-        "title": "图表可视化",
-        "description": "图表组件封装、数据结构适配与交互效果测试，用于验证图表方案落地路径。"
       },
       "chinaFull": {
         "title": "全国边界预览",
@@ -44,6 +40,10 @@
       "radarFilter": {
         "title": "雷达图阈值过滤",
         "description": "基于 Mapbox 栅格图层加载雷达降水图，支持按颜色阈值区间过滤展示不同降水强度区域。"
+      },
+      "webglColorramp": {
+        "title": "WebGL 灰度图色阶",
+        "description": "前端 IDW 网格 → 1 通道灰度 PNG → GPU Fragment Shader 实时色阶映射（GL_LINEAR 双线性插值），毫秒级响应。"
       }
     }
   },

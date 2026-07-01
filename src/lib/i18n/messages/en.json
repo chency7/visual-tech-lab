@@ -25,17 +25,13 @@
     "tools": "Tools",
     "openCase": "Open",
     "cards": {
-      "dualSync": {
-        "title": "Dual Map Sync",
-        "description": "MapLibre GL dual-view sync with pan/zoom linking and an IDW interpolation capability check."
+      "contourCompare": {
+        "title": "Contour Comparison",
+        "description": "Side-by-side comparison of backend Java wcontour smooth isobands vs frontend IDW interpolation with Chaikin smoothing."
       },
       "hubeiData": {
         "title": "Geo Data Workshop",
         "description": "GeoJSON import/export, attribute editing, random point generation, plus an API script execution test entry."
-      },
-      "mextChart": {
-        "title": "Chart Playground",
-        "description": "Chart component integration, data structure adaptation, and interaction testing for solution validation."
       },
       "chinaFull": {
         "title": "China Boundary Preview",
@@ -44,6 +40,10 @@
       "radarFilter": {
         "title": "Radar Threshold Filter",
         "description": "Load radar precipitation image via Mapbox raster layer, filter by color threshold ranges to display different precipitation intensity zones."
+      },
+      "webglColorramp": {
+        "title": "WebGL Grayscale Color Ramp",
+        "description": "Frontend IDW grid → 1-channel grayscale PNG → GPU fragment shader color ramp with GL_LINEAR bilinear filtering, sub-millisecond response."
       }
     }
   },
